@@ -1,19 +1,21 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Checkout Code') {
-            steps {
-                git url: 'https://github.com/kyarnk/JenkinsSecurity.git', branch: 'main'
-            }
-        }
+    environment {
+        REMOTE_SERVER = "192.168.0.241" 
+        REMOTE_DOCKER_CONTAINER_NAME = "dvna"
+        NODE_APP_PATH = "/app" 
+    }
 
-        stage('Run Semgrep') {
+    stages {
+        stage('Run Semgrep on Remote Node.js App') {
             steps {
                 script {
-                    def workspace = pwd()
+                    // Установим SSH соединение и запускаем команду на удалённом сервере
                     sh """
-                    docker run --rm -v ${workspace}:/src returntocorp/semgrep semgrep --config=auto --json > semgrep-results.json
+                    ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519.pub kyarnk@${REMOTE_SERVER} "
+                        docker exec ${REMOTE_DOCKER_CONTAINER_NAME} semgrep --config=auto --json --disable-nosem --verbose --exclude=node_modules ${NODE_APP_PATH} > semgrep-results.json
+                    "
                     """
                 }
             }

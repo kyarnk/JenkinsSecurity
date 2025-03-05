@@ -13,7 +13,7 @@ pipeline {
                 script {
                     // Установим SSH соединение и запускаем команду на удалённом сервере
                     sh """
-                    ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519.pub kyarnk@${REMOTE_SERVER} "
+                    ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 kyarnk@${REMOTE_SERVER} "
                         docker exec ${REMOTE_DOCKER_CONTAINER_NAME} semgrep --config=auto --json --disable-nosem --verbose --exclude=node_modules ${NODE_APP_PATH} > semgrep-results.json
                     "
                     """

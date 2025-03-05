@@ -21,7 +21,7 @@ pipeline {
                         docker exec dvna sed -i "s/http:\\/\\/deb.debian.org/http:\\/\\/ftp.debian.org/g" /etc/apt/sources.list
                         docker exec dvna sed -i "s/jessie/buster/g" /etc/apt/sources.list
                         docker exec dvna apt-get update -y
-                        docker exec dvna apt-get install -y python3 python3-pip
+                        docker exec dvna apt-get install -y python3 python3-pip --force-yes
                         docker exec dvna pip3 install semgrep
                       fi
                     '

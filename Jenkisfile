@@ -11,9 +11,10 @@ pipeline {
         stage('Run Semgrep') {
             steps {
                 script {
-                    sh '''
-                    docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep --config=auto --json > semgrep-results.json
-                    '''
+                    def workspace = pwd()
+                    sh """
+                    docker run --rm -v ${workspace}:/src returntocorp/semgrep semgrep --config=auto --json > semgrep-results.json
+                    """
                 }
             }
         }

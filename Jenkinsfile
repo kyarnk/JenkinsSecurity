@@ -17,7 +17,9 @@ pipeline {
                     ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_ed25519 kyarnk@192.168.0.241 '
                       if ! docker exec dvna which semgrep; then
                         echo "Semgrep not found, installing it..."
-                        docker exec dvna pip install semgrep
+                        # Устанавливаем Python и pip, если их нет
+                        docker exec dvna apt-get update && apt-get install -y python3 python3-pip
+                        docker exec dvna pip3 install semgrep
                       fi
                     '
 
@@ -37,3 +39,4 @@ pipeline {
         }
     }
 }
+

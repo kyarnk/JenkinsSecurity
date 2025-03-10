@@ -34,7 +34,7 @@ pipeline {
                         echo "Installing Semgrep..."
 			docker exec dvna sed -i 's/jessie/buster/g' /etc/apt/sources.list
                         docker exec dvna apt-get update -y
-                        docker exec dvna apt-get install -y python3 python3-pip
+                        docker exec dvna apt-get install -y --force-yes python3 python3-pip
                         docker exec dvna pip3 install semgrep
                     fi
                     """

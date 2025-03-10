@@ -32,6 +32,7 @@ pipeline {
                     sh """
                     if ! docker exec dvna which semgrep > /dev/null; then
                         echo "Installing Semgrep..."
+			docker exec dvna sed -i 's/jessie/buster/g' /etc/apt/soursec.list
                         docker exec dvna apt-get update -y
                         docker exec dvna apt-get install -y python3 python3-pip
                         docker exec dvna pip3 install semgrep

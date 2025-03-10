@@ -8,38 +8,67 @@ pipeline {
             }
         }
 
-        stage('Run Semgrep on Remote Node.js App') {
+        stage('Start DVNA Container') {
             steps {
                 script {
-                    def workspace = pwd()
+                    // Проверяем, запущен ли контейнер dvna, если нет — запускаем
                     sh """
-                    # Проверяем, установлен ли semgrep в контейнере, и если нет, устанавливаем его
-                    ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_ed25519 kyarnk@192.168.0.241 '
-                      if ! docker exec dvna which semgrep; then
-                        echo "Semgrep not found, installing it..."
-                        # Обновляем репозитории Debian до актуальных
-                        docker exec dvna sed -i "s/http:\\/\\/deb.debian.org/http:\\/\\/ftp.debian.org/g" /etc/apt/sources.list
-                        docker exec dvna sed -i "s/jessie/buster/g" /etc/apt/sources.list
-                        docker exec dvna apt-get update -y
-                        docker exec dvna apt-get install -y python3 python3-pip --force-yes
-                        docker exec dvna pip3 install semgrep
-                      fi
-                    '
-
-                    # Запускаем semgrep в контейнере
-                    ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_ed25519 kyarnk@192.168.0.241 '
-                      docker exec dvna semgrep --config=auto --json --disable-nosem --verbose --exclude=node_modules /app > semgrep-results.json
-                    '
+                    if [ -z "\$(docker ps -q -f name=dvna)" ]; then
+                        echo "Starting DVNA container..."
+                        docker run --name dvna -p 9090:9090 -d appsecco/dvna:sqlite
+                        sleep 5  # Даем контейнеру время на запуск
+                    else
+                        echo "DVNA is already running"
+                    fi
                     """
                 }
             }
         }
 
-        stage('Publish Results') {
+        stage('Run Semgrep Scan') {
+            steps {
+                script {
+                    // Проверяем, установлен ли Semgrep, если нет — устанавливаем
+                    sh """
+                    if ! docker exec dvna which semgrep > /dev/null; then
+                        echo "Installing Semgrep..."
+                        docker exec dvna apt-get update -y
+                        docker exec dvna apt-get install -y python3 python3-pip
+                        docker exec dvna pip3 install semgrep
+                    fi
+                    """
+
+                    // Запускаем Semgrep
+                    sh """
+                    echo "Running Semgrep scan..."
+                    docker exec dvna semgrep --config=auto --json --disable-nosem --verbose --exclude=node_modules /app > semgrep-results.json
+                    """
+                }
+            }
+        }
+
+        stage('Publish Scan Results') {
             steps {
                 archiveArtifacts artifacts: 'semgrep-results.json', fingerprint: true
             }
         }
+
+        stage('Stop DVNA Container') {
+            steps {
+                script {
+                    // Останавливаем и удаляем контейнер после сканирования
+                    sh """
+                    echo "Stopping and removing DVNA container..."
+                    docker stop dvna && docker rm dvna
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed, cleaning up if needed"
+        }
     }
 }
-

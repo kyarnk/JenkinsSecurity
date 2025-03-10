@@ -11,7 +11,7 @@ pipeline {
         stage('Start DVNA Container') {
             steps {
                 script {
-                    // Проверяем, запущен ли контейнер dvna, если нет — запускаем
+                    // Проверяем запущен ли контейнер dvna, если нет — запускаем
                     sh """
                     if [ -z "\$(docker ps -q -f name=dvna)" ]; then
                         echo "Starting DVNA container..."
@@ -72,4 +72,4 @@ pipeline {
         }
     }
 }
-#test
+

@@ -37,7 +37,7 @@ pipeline {
                         docker exec dvna apt-get install -y --force-yes python3 python3-pip
                         docker exec dvna pip3 install semgrep
                     fi
-                    """
+                    """ 
 
                     // Запускаем Semgrep
                     sh """
@@ -50,7 +50,33 @@ pipeline {
 
         stage('Publish Scan Results') {
             steps {
-                archiveArtifacts artifacts: 'semgrep-results.json', fingerprint: true
+                script {
+                    // Отправляем результаты в DefectDojo через API
+                    def defectdojo_api_url = 'http://51.250.13.203:8080/api/key-v2'
+                    def api_key = '7e01b91b9f5a1dcb109f9c205e85143786ad6f52'
+                    def engagement_id = '1'  // ID вовлечения в DefectDojo
+                    def product_id = '1' // ID продукта в DefectDojo
+                    
+                    def jsonPayload = readFile('semgrep-results.json')
+                    
+                    // Преобразуем результат Semgrep в формат, понятный DefectDojo
+                    def defects = parseSemgrepResults(jsonPayload)
+                    
+                    // Отправляем данные в DefectDojo
+                    defects.each { defect ->
+                        sh """
+                        curl -X POST ${defectdojo_api_url}finding/ --header "Authorization: Bearer ${api_key}" --header "Content-Type: application/json" --data '{
+                            "engagement": "${engagement_id}",
+                            "product": "${product_id}",
+                            "title": "${defect.title}",
+                            "severity": "${defect.severity}",
+                            "description": "${defect.description}",
+                            "date_detected": "${defect.date}",
+                            "url": "${defect.url}"
+                        }'
+                        """
+                    }
+                }
             }
         }
 
@@ -74,3 +100,17 @@ pipeline {
     }
 }
 
+def parseSemgrepResults(String jsonResults) {
+    def results = readJSON text: jsonResults
+    def defects = []
+    results.each { result ->
+        defects << [
+            title: result.title,
+            severity: result.severity,
+            description: result.description,
+            date: result.date,
+            url: result.url
+        ]
+    }
+    return defects
+}

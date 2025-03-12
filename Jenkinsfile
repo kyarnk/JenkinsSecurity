@@ -1,4 +1,4 @@
-@Library('JenkinsSecurity@main') _
+@Library('JenkinsSecurity@main') _  // Подключаем библиотеку
 
 pipeline {
     agent any
@@ -29,7 +29,7 @@ pipeline {
         stage('Run Semgrep Scan') {
             steps {
                 script {
-                    def semgrepResults = runSemgrepScan()
+                    def semgrepResults = runSemgrepScan()  // Вызываем нашу функцию
                     writeFile file: 'semgrep-results.json', text: semgrepResults
                 }
             }
@@ -46,7 +46,7 @@ pipeline {
                     def jsonPayload = readFile('semgrep-results.json')
                     def defects = parseSemgrepResults(jsonPayload)
                     
-                    defects.each { defect ->
+                    defects.each { defect ->  // Для каждого дефекта отправляем в DefectDojo
                         sh """
                         curl -X POST ${defectdojo_api_url}finding/ --header "Authorization: Bearer ${api_key}" --header "Content-Type: application/json" --data '{
                             "engagement": "${engagement_id}",

@@ -1,5 +1,8 @@
 @Library('JenkinsSecurity@main') _  
 
+import SemgrepUtils
+
+
 pipeline {
     agent any
 
@@ -29,7 +32,8 @@ pipeline {
         stage('Run Semgrep Scan') {
             steps {
                 script {
-                    def semgrepResults = runSemgrepScan()  
+                    SemgrepUtils.installSemgrep("dvna")  
+                    def semgrepResults = SemgrepUtils.runSemgrep("dvna", "--config=auto", "semgrep-results.json")
                     writeFile file: 'semgrep-results.json', text: semgrepResults
                 }
             }
@@ -44,7 +48,7 @@ pipeline {
                     def product_id = '1'
 
                     def jsonPayload = readFile('semgrep-results.json')
-                    def defects = parseSemgrepResults(jsonPayload)
+                    def defects = SemgrepUtils.parseSemgrepResults(jsonPayload)
 
                     defects.each { defect ->  
                         def payload = """

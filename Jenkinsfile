@@ -5,7 +5,7 @@ pipeline {
 
     environment {
         DEFECTDOJO_URL = 'http://192.168.0.195:8090/api/v2/findings/'
-        DEFECTDOJO_API_KEY = credentials('05390d3b4b4ce06cbbff77bcd0220543ffb7a6fc')
+        DEFECTDOJO_API_KEY = credentials('defectdojo-api-key')
         ENGAGEMENT_ID = '1'
         PRODUCT_ID = '1'
     }
@@ -36,15 +36,17 @@ pipeline {
         stage('Security Scan') {
             steps {
                 script {
-                    def findings = runSecurityScan(
-                        targetDir: '.',
-                        defectDojoUrl: env.DEFECTDOJO_URL,
-                        defectDojoApiKey: env.DEFECTDOJO_API_KEY,
-                        engagementId: env.ENGAGEMENT_ID,
-                        productId: env.PRODUCT_ID
-                    )
-                    
-                    echo "Found ${findings.size()} security issues"
+                    withCredentials([string(credentialsId: 'defectdojo-api-key', variable: 'DEFECTDOJO_API_KEY')]) {
+                        def findings = runSecurityScan(
+                            targetDir: '.',
+                            defectDojoUrl: env.DEFECTDOJO_URL,
+                            defectDojoApiKey: env.DEFECTDOJO_API_KEY,
+                            engagementId: env.ENGAGEMENT_ID,
+                            productId: env.PRODUCT_ID
+                        )
+                        
+                        echo "Found ${findings.size()} security issues"
+                    }
                 }
             }
         }

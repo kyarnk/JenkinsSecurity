@@ -2,7 +2,7 @@
 class SemgrepUtils {
     
     static void installSemgrep(String dockerContainer) {
-        echo "Checking if Semgrep is installed in container: ${dockerContainer}"
+        println "Checking if Semgrep is installed in container: ${dockerContainer}"
         sh """
         if ! docker exec ${dockerContainer} which semgrep > /dev/null; then
             echo "Installing Semgrep..."
@@ -14,7 +14,7 @@ class SemgrepUtils {
     }
 
     static String runSemgrep(String dockerContainer, String config) {
-        echo "Running Semgrep scan..."
+        println "Running Semgrep scan..."
         return sh(script: """
         docker exec ${dockerContainer} semgrep --config=${config} --json --exclude=node_modules --exclude=venv --exclude=.git /app
         """, returnStdout: true).trim()

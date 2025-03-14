@@ -1,5 +1,6 @@
 // src/SemgrepUtils.groovy
 def installSemgrep(dockerContainer) {
+    echo "Checking if Semgrep is installed in container: ${dockerContainer}"
     sh """
     if ! docker exec ${dockerContainer} which semgrep > /dev/null; then
         echo "Installing Semgrep..."

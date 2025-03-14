@@ -13,21 +13,23 @@ def installSemgrep(dockerContainer) {
 def runSemgrep(dockerContainer, config, outputFile) {
     sh """
     echo "Running Semgrep scan..."
-    docker exec ${dockerContainer} semgrep --config=${config} --json --disable-nosem --verbose --exclude=node_modules /app > ${outputFile}
+    docker exec ${dockerContainer} semgrep --config=${config} --json --exclude=node_modules --exclude=venv --exclude=.git /app > ${outputFile}
     """
 }
 
 def parseSemgrepResults(String jsonResults) {
     def results = readJSON text: jsonResults
     def defects = []
-    results.each { result ->
+    
+    results.results.each { result -> 
         defects << [
-            title: result.title,
-            severity: result.severity,
-            description: result.description,
-            date: result.date,
-            url: result.url
+            title: result.extra.message,
+            severity: result.extra.severity ?: "Unknown",
+            description: "Check ID: ${result.check_id}\nFile: ${result.path}\nLine: ${result.start.line}",
+            date: new Date().format("yyyy-MM-dd"),
+            url: "N/A"
         ]
     }
     return defects
 }
+

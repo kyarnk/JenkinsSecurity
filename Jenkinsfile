@@ -2,7 +2,6 @@
 
 import SemgrepUtils
 
-
 pipeline {
     agent any
 
@@ -32,8 +31,7 @@ pipeline {
         stage('Run Semgrep Scan') {
             steps {
                 script {
-                    SemgrepUtils.installSemgrep("dvna")  
-                    def semgrepResults = SemgrepUtils.runSemgrep("dvna", "--config=auto", "semgrep-results.json")
+                    def semgrepResults = runSemgrepScan()
                     writeFile file: 'semgrep-results.json', text: semgrepResults
                 }
             }

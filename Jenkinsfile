@@ -1,4 +1,4 @@
-@Library('JenkinsSecurity@main') _  // Подключаем библиотеку
+@Library('JenkinsSecurity@main') _  
 
 pipeline {
     agent any
@@ -29,7 +29,7 @@ pipeline {
         stage('Run Semgrep Scan') {
             steps {
                 script {
-                    def semgrepResults = runSemgrepScan()  // Вызываем нашу функцию
+                    def semgrepResults = runSemgrepScan()  
                     writeFile file: 'semgrep-results.json', text: semgrepResults
                 }
             }
@@ -38,25 +38,33 @@ pipeline {
         stage('Publish Scan Results') {
             steps {
                 script {
-                    def defectdojo_api_url = 'http://192.168.0.195:8090/api/key-v2'
+                    def defectdojo_api_url = 'http://192.168.0.195:8090/api/v2/findings/'
                     def api_key = '05390d3b4b4ce06cbbff77bcd0220543ffb7a6fc'
                     def engagement_id = '1'
                     def product_id = '1'
-                    
+
                     def jsonPayload = readFile('semgrep-results.json')
                     def defects = parseSemgrepResults(jsonPayload)
-                    
-                    defects.each { defect ->  // Для каждого дефекта отправляем в DefectDojo
-                        sh """
-                        curl -X POST ${defectdojo_api_url}finding/ --header "Authorization: Bearer ${api_key}" --header "Content-Type: application/json" --data '{
-                            "engagement": "${engagement_id}",
+
+                    defects.each { defect ->  
+                        def payload = """
+                        {
+                            "test": "${engagement_id}",
                             "product": "${product_id}",
                             "title": "${defect.title}",
                             "severity": "${defect.severity}",
                             "description": "${defect.description}",
-                            "date_detected": "${defect.date}",
-                            "url": "${defect.url}"
-                        }'
+                            "date": "${defect.date}",
+                            "file_path": "${defect.url}"
+                        }
+                        """
+                        writeFile file: 'defect.json', text: payload
+
+                        sh """
+                        curl -X POST ${defectdojo_api_url} \
+                            --header "Authorization: Token ${api_key}" \
+                            --header "Content-Type: application/json" \
+                            --data @defect.json
                         """
                     }
                 }
@@ -66,11 +74,10 @@ pipeline {
         stage('Stop DVNA Container') {
             steps {
                 script {
-                    sh """
-                    docker stop dvna && docker rm dvna
-                    """
+                    sh "docker stop dvna && docker rm dvna"
                 }
             }
         }
     }
 }
+

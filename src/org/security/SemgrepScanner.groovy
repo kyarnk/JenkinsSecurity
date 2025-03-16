@@ -5,45 +5,22 @@ import groovy.json.JsonSlurper
 class SemgrepScanner implements Serializable {
     private def script
     private String targetDir
-    private boolean isNode1
     
-    SemgrepScanner(script, String targetDir = '.', boolean isNode1 = false) {
+    SemgrepScanner(script, String targetDir = '.', boolean isNode1 = true) {
         this.script = script
         this.targetDir = targetDir
-        this.isNode1 = isNode1
     }
     
     def scan() {
-        if (isNode1) {
-            return scanDVNAContainer()
-        } else {
-            return scanLocal()
-        }
-    }
-    
-    private def scanLocal() {
-        script.sh """
-            python3 -m pip install --user semgrep
-            semgrep scan --json --config=auto ${targetDir} > semgrep-results.json
-        """
-        return script.readFile('semgrep-results.json')
+        return scanDVNAContainer()
     }
     
     private def scanDVNAContainer() {
-        // Копируем semgrep в контейнер и сканируем
         script.sh """
-            # Устанавливаем semgrep локально для копирования в контейнер
-            python3 -m pip install --user semgrep
-            
-            # Копируем semgrep в контейнер
-            docker exec dvna apt-get update
-            docker exec dvna apt-get install -y python3-pip
-            docker exec dvna pip3 install semgrep
-            
             # Создаем временную директорию в контейнере
             docker exec dvna mkdir -p /tmp/scan
             
-            # Копируем код приложения из контейнера во временную директорию
+            # Копируем код приложения для сканирования
             docker exec dvna cp -r /app/* /tmp/scan/
             
             # Запускаем сканирование внутри контейнера

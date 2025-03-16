@@ -8,7 +8,6 @@ pipeline {
         DEFECTDOJO_API_KEY = credentials('defectdojo-api-key')
         ENGAGEMENT_ID = '1'
         PRODUCT_ID = '1'
-        PATH = "$HOME/.local/bin:${env.PATH}"
     }
 
     options {
@@ -17,36 +16,6 @@ pipeline {
     }
 
     stages {
-        stage('Setup Python') {
-            steps {
-                script {
-                    echo "Setting up Python environment..."
-                    try {
-                        sh '''
-                            echo "Python version:"
-                            python3 --version
-                            
-                            echo "Installing pip..."
-                            curl -sS https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-                            python3 get-pip.py --user
-                            export PATH=$HOME/.local/bin:$PATH
-                            
-                            echo "Installing semgrep..."
-                            python3 -m pip install --user semgrep
-                            
-                            echo "Semgrep version:"
-                            semgrep --version
-                            
-                            rm -f get-pip.py
-                        '''
-                    } catch (Exception e) {
-                        echo "Ошибка при установке Python dependencies: ${e.message}"
-                        error "Не удалось установить Python dependencies"
-                    }
-                }
-            }
-        }
-
         stage('Debug Info') {
             steps {
                 script {
@@ -111,10 +80,20 @@ pipeline {
                             docker run --name dvna -p 9090:9090 -d appsecco/dvna:sqlite
                             echo "Waiting for container to start..."
                             sleep 5
+                            
+                            echo "Installing Python and Semgrep in container..."
+                            docker exec dvna apt-get update
+                            docker exec dvna apt-get install -y python3 python3-pip
+                            docker exec dvna pip3 install semgrep
+                            
                             echo "Container status:"
                             docker ps | grep dvna
                         else
-                            echo "DVNA is already running"
+                            echo "DVNA container is already running"
+                            echo "Updating Python and Semgrep in container..."
+                            docker exec dvna apt-get update
+                            docker exec dvna apt-get install -y python3 python3-pip
+                            docker exec dvna pip3 install --upgrade semgrep
                             docker ps | grep dvna
                         fi
                         """
@@ -133,7 +112,7 @@ pipeline {
                     try {
                         withCredentials([string(credentialsId: 'defectdojo-api-key', variable: 'DEFECTDOJO_API_KEY')]) {
                             echo "Credentials loaded successfully"
-                            echo "Starting Semgrep scan..."
+                            echo "Starting Semgrep scan in DVNA container..."
                             
                             def findings = runSecurityScan(
                                 targetDir: '.',
@@ -141,7 +120,7 @@ pipeline {
                                 defectDojoApiKey: env.DEFECTDOJO_API_KEY,
                                 engagementId: env.ENGAGEMENT_ID,
                                 productId: env.PRODUCT_ID,
-                                isNode1: env.NODE_NAME == 'node1'
+                                isNode1: true
                             )
                             
                             echo "Scan completed. Found ${findings.size()} security issues"

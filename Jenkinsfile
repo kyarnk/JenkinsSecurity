@@ -85,10 +85,12 @@ pipeline {
                             docker exec dvna bash -c 'echo "deb http://archive.debian.org/debian/ jessie main" > /etc/apt/sources.list'
                             docker exec dvna bash -c 'echo "deb http://archive.debian.org/debian-security jessie/updates main" >> /etc/apt/sources.list'
                             
-                            echo "Installing Python and Semgrep in container..."
+                            echo "Installing Python and dependencies in container..."
                             docker exec dvna apt-get -o Acquire::Check-Valid-Until=false update
-                            docker exec dvna apt-get install -y --force-yes python3 python3-pip
-                            docker exec dvna pip3 install semgrep
+                            docker exec dvna apt-get install -y --force-yes python3 python3-pip python3-wheel python3-setuptools
+                            
+                            echo "Installing specific version of semgrep..."
+                            docker exec dvna pip3 install 'semgrep<1.0.0'
                             
                             echo "Container status:"
                             docker ps | grep dvna
@@ -98,8 +100,8 @@ pipeline {
                             docker exec dvna bash -c 'echo "deb http://archive.debian.org/debian/ jessie main" > /etc/apt/sources.list'
                             docker exec dvna bash -c 'echo "deb http://archive.debian.org/debian-security jessie/updates main" >> /etc/apt/sources.list'
                             docker exec dvna apt-get -o Acquire::Check-Valid-Until=false update
-                            docker exec dvna apt-get install -y --force-yes python3 python3-pip
-                            docker exec dvna pip3 install --upgrade semgrep
+                            docker exec dvna apt-get install -y --force-yes python3 python3-pip python3-wheel python3-setuptools
+                            docker exec dvna pip3 install 'semgrep<1.0.0'
                             docker ps | grep dvna
                         fi
                         """

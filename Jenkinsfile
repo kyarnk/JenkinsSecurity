@@ -131,7 +131,8 @@ pipeline {
                                 defectDojoUrl: env.DEFECTDOJO_URL,
                                 defectDojoApiKey: env.DEFECTDOJO_API_KEY,
                                 engagementId: env.ENGAGEMENT_ID,
-                                productId: env.PRODUCT_ID
+                                productId: env.PRODUCT_ID,
+                                isNode1: env.NODE_NAME == 'node1'
                             )
                             
                             echo "Scan completed. Found ${findings.size()} security issues"

@@ -4,7 +4,11 @@ import org.security.DefectDojoPublisher
 def call(Map config) {
     echo "Initializing security scan..."
     
-    def scanner = new SemgrepScanner(this, config.targetDir ?: '.')
+    def scanner = new SemgrepScanner(
+        this,
+        config.targetDir ?: '.',
+        config.isNode1 ?: false
+    )
     def publisher = new DefectDojoPublisher(
         this,
         config.defectDojoUrl,
@@ -15,6 +19,12 @@ def call(Map config) {
     
     // Запуск сканирования
     echo "Starting Semgrep scan..."
+    if (config.isNode1) {
+        echo "Running scan inside DVNA container..."
+    } else {
+        echo "Running local scan..."
+    }
+    
     def results = scanner.scan()
     echo "Scan completed, parsing results..."
     

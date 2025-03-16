@@ -1,5 +1,7 @@
 package org.security
 
+import groovy.json.JsonSlurper
+
 class SemgrepScanner implements Serializable {
     private def script
     private String targetDir
@@ -11,24 +13,27 @@ class SemgrepScanner implements Serializable {
     
     def scan() {
         script.sh """
-            python3 -m pip install semgrep
+            python3 -m pip install --user semgrep
             semgrep scan --json --config=auto ${targetDir} > semgrep-results.json
         """
         return script.readFile('semgrep-results.json')
     }
     
     def parseResults(String jsonResults) {
-        def parsedJson = script.readJSON text: jsonResults
+        def jsonSlurper = new JsonSlurper()
+        def parsedJson = jsonSlurper.parseText(jsonResults)
         def findings = []
         
-        parsedJson.results.each { result ->
-            findings << [
-                title: result.check_id,
-                severity: getSeverity(result.extra.severity),
-                description: "${result.extra.message}\nFound in: ${result.path}:${result.start.line}",
-                date: new Date().format("yyyy-MM-dd"),
-                url: result.path
-            ]
+        if (parsedJson.results) {
+            parsedJson.results.each { result ->
+                findings << [
+                    title: result.check_id,
+                    severity: getSeverity(result.extra?.severity),
+                    description: "${result.extra?.message ?: 'No message'}\nFound in: ${result.path}:${result.start?.line ?: 'unknown'}",
+                    date: new Date().format("yyyy-MM-dd"),
+                    url: result.path
+                ]
+            }
         }
         
         return findings

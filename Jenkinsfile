@@ -25,10 +25,19 @@ pipeline {
                         sh '''
                             echo "Python version:"
                             python3 --version
+                            
+                            echo "Installing pip..."
+                            curl -sS https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+                            python3 get-pip.py --user
+                            export PATH=$HOME/.local/bin:$PATH
+                            
                             echo "Installing semgrep..."
                             python3 -m pip install --user semgrep
+                            
                             echo "Semgrep version:"
                             semgrep --version
+                            
+                            rm -f get-pip.py
                         '''
                     } catch (Exception e) {
                         echo "Ошибка при установке Python dependencies: ${e.message}"

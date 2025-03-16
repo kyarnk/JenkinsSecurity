@@ -16,6 +16,28 @@ pipeline {
     }
 
     stages {
+        stage('Setup Python') {
+            steps {
+                script {
+                    echo "Setting up Python environment..."
+                    try {
+                        sh '''
+                            echo "Python version:"
+                            python3 --version
+                            echo "Installing pip..."
+                            apt-get update
+                            apt-get install -y python3-pip
+                            echo "Pip version:"
+                            python3 -m pip --version
+                        '''
+                    } catch (Exception e) {
+                        echo "Ошибка при установке Python dependencies: ${e.message}"
+                        error "Не удалось установить Python dependencies"
+                    }
+                }
+            }
+        }
+
         stage('Debug Info') {
             steps {
                 script {
@@ -54,12 +76,9 @@ pipeline {
                             ]]
                         ]
                         echo "Checkout completed successfully"
-                        sh 'ls -la'  // Показать содержимое после checkout
+                        sh 'ls -la'
                     } catch (Exception e) {
-                        echo "Детальная информация об ошибке checkout:"
-                        echo "Message: ${e.message}"
-                        echo "Cause: ${e.cause}"
-                        echo "Stacktrace: ${e.printStackTrace()}"
+                        echo "Ошибка при checkout: ${e.message}"
                         error "Не удалось получить код из репозитория"
                     }
                 }
@@ -91,10 +110,7 @@ pipeline {
                         fi
                         """
                     } catch (Exception e) {
-                        echo "Детальная информация об ошибке Docker:"
-                        echo "Message: ${e.message}"
-                        echo "Cause: ${e.cause}"
-                        echo "Stacktrace: ${e.printStackTrace()}"
+                        echo "Ошибка при запуске Docker: ${e.message}"
                         error "Не удалось запустить DVNA контейнер"
                     }
                 }
@@ -121,10 +137,7 @@ pipeline {
                             echo "Scan completed. Found ${findings.size()} security issues"
                         }
                     } catch (Exception e) {
-                        echo "Детальная информация об ошибке сканирования:"
-                        echo "Message: ${e.message}"
-                        echo "Cause: ${e.cause}"
-                        echo "Stacktrace: ${e.printStackTrace()}"
+                        echo "Ошибка при сканировании: ${e.message}"
                         error "Не удалось выполнить сканирование безопасности"
                     }
                 }
@@ -144,10 +157,7 @@ pipeline {
                         echo "Cleanup completed"
                         """
                     } catch (Exception e) {
-                        echo "Детальная информация об ошибке остановки контейнера:"
-                        echo "Message: ${e.message}"
-                        echo "Cause: ${e.cause}"
-                        echo "Stacktrace: ${e.printStackTrace()}"
+                        echo "Ошибка при остановке контейнера: ${e.message}"
                         echo "Предупреждение: Не удалось остановить контейнер DVNA"
                     }
                 }

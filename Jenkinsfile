@@ -83,7 +83,7 @@ pipeline {
                             
                             echo "Installing Python and Semgrep in container..."
                             docker exec dvna apt-get update
-                            docker exec dvna apt-get install -y --force-yespython3 python3-pip
+                            docker exec dvna apt-get install -y --force-yes python3 python3-pip
                             docker exec dvna pip3 install semgrep
                             
                             echo "Container status:"
@@ -92,7 +92,7 @@ pipeline {
                             echo "DVNA container is already running"
                             echo "Updating Python and Semgrep in container..."
                             docker exec dvna apt-get update
-                            docker exec dvna apt-get install -y --force-yespython3 python3-pip
+                            docker exec dvna apt-get install -y --force-yes python3 python3-pip
                             docker exec dvna pip3 install --upgrade semgrep
                             docker ps | grep dvna
                         fi

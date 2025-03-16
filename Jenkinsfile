@@ -8,6 +8,7 @@ pipeline {
         DEFECTDOJO_API_KEY = credentials('defectdojo-api-key')
         ENGAGEMENT_ID = '1'
         PRODUCT_ID = '1'
+        PATH = "$HOME/.local/bin:${env.PATH}"
     }
 
     options {
@@ -24,11 +25,10 @@ pipeline {
                         sh '''
                             echo "Python version:"
                             python3 --version
-                            echo "Installing pip..."
-                            apt-get update
-                            apt-get install -y python3-pip
-                            echo "Pip version:"
-                            python3 -m pip --version
+                            echo "Installing semgrep..."
+                            python3 -m pip install --user semgrep
+                            echo "Semgrep version:"
+                            semgrep --version
                         '''
                     } catch (Exception e) {
                         echo "Ошибка при установке Python dependencies: ${e.message}"

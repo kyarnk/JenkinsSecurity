@@ -12,13 +12,38 @@ pipeline {
 
     options {
         timeout(time: 1, unit: 'HOURS')
-        ansiColor('xterm')
+        timestamps()
     }
 
     stages {
+        stage('Debug Info') {
+            steps {
+                script {
+                    echo "Checking environment..."
+                    sh """
+                        echo "Workspace: \${WORKSPACE}"
+                        echo "Jenkins Home: \${JENKINS_HOME}"
+                        echo "Java Version:"
+                        java -version
+                        echo "Git Version:"
+                        git --version
+                        echo "Docker Version:"
+                        docker --version
+                        echo "Current User:"
+                        whoami
+                        echo "Current Directory:"
+                        pwd
+                        echo "Directory Contents:"
+                        ls -la
+                    """
+                }
+            }
+        }
+
         stage('Checkout Code') {
             steps {
                 script {
+                    echo "Starting checkout stage..."
                     try {
                         checkout scm: [
                             $class: 'GitSCM',
@@ -28,8 +53,13 @@ pipeline {
                                 credentialsId: 'github-credentials'
                             ]]
                         ]
+                        echo "Checkout completed successfully"
+                        sh 'ls -la'  // Показать содержимое после checkout
                     } catch (Exception e) {
-                        echo "Ошибка при checkout: ${e.message}"
+                        echo "Детальная информация об ошибке checkout:"
+                        echo "Message: ${e.message}"
+                        echo "Cause: ${e.cause}"
+                        echo "Stacktrace: ${e.printStackTrace()}"
                         error "Не удалось получить код из репозитория"
                     }
                 }
@@ -39,18 +69,32 @@ pipeline {
         stage('Start DVNA Container') {
             steps {
                 script {
+                    echo "Starting DVNA container stage..."
                     try {
                         sh """
+                        echo "Checking Docker status..."
+                        docker info
+                        
+                        echo "Checking existing containers..."
+                        docker ps -a
+                        
                         if [ -z "\$(docker ps -q -f name=dvna)" ]; then
                             echo "Starting DVNA container..."
                             docker run --name dvna -p 9090:9090 -d appsecco/dvna:sqlite
+                            echo "Waiting for container to start..."
                             sleep 5
+                            echo "Container status:"
+                            docker ps | grep dvna
                         else
                             echo "DVNA is already running"
+                            docker ps | grep dvna
                         fi
                         """
                     } catch (Exception e) {
-                        echo "Ошибка при запуске контейнера: ${e.message}"
+                        echo "Детальная информация об ошибке Docker:"
+                        echo "Message: ${e.message}"
+                        echo "Cause: ${e.cause}"
+                        echo "Stacktrace: ${e.printStackTrace()}"
                         error "Не удалось запустить DVNA контейнер"
                     }
                 }
@@ -60,8 +104,12 @@ pipeline {
         stage('Security Scan') {
             steps {
                 script {
+                    echo "Starting security scan stage..."
                     try {
                         withCredentials([string(credentialsId: 'defectdojo-api-key', variable: 'DEFECTDOJO_API_KEY')]) {
+                            echo "Credentials loaded successfully"
+                            echo "Starting Semgrep scan..."
+                            
                             def findings = runSecurityScan(
                                 targetDir: '.',
                                 defectDojoUrl: env.DEFECTDOJO_URL,
@@ -70,10 +118,13 @@ pipeline {
                                 productId: env.PRODUCT_ID
                             )
                             
-                            echo "Found ${findings.size()} security issues"
+                            echo "Scan completed. Found ${findings.size()} security issues"
                         }
                     } catch (Exception e) {
-                        echo "Ошибка при сканировании: ${e.message}"
+                        echo "Детальная информация об ошибке сканирования:"
+                        echo "Message: ${e.message}"
+                        echo "Cause: ${e.cause}"
+                        echo "Stacktrace: ${e.printStackTrace()}"
                         error "Не удалось выполнить сканирование безопасности"
                     }
                 }
@@ -83,11 +134,20 @@ pipeline {
         stage('Stop DVNA Container') {
             steps {
                 script {
+                    echo "Starting container cleanup stage..."
                     try {
-                        sh "docker stop dvna && docker rm dvna"
+                        sh """
+                        echo "Stopping DVNA container..."
+                        docker stop dvna
+                        echo "Removing DVNA container..."
+                        docker rm dvna
+                        echo "Cleanup completed"
+                        """
                     } catch (Exception e) {
-                        echo "Ошибка при остановке контейнера: ${e.message}"
-                        // Не прерываем пайплайн, если не удалось остановить контейнер
+                        echo "Детальная информация об ошибке остановки контейнера:"
+                        echo "Message: ${e.message}"
+                        echo "Cause: ${e.cause}"
+                        echo "Stacktrace: ${e.printStackTrace()}"
                         echo "Предупреждение: Не удалось остановить контейнер DVNA"
                     }
                 }
@@ -97,6 +157,7 @@ pipeline {
 
     post {
         always {
+            echo "Pipeline finished - cleaning workspace"
             cleanWs()
         }
         failure {

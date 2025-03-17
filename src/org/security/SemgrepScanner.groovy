@@ -24,7 +24,7 @@ class SemgrepScanner implements Serializable {
         // Запускаем сканирование
         def scanResult = script.sh(
             script: """
-                docker exec dvna semgrep scan \
+                docker exec dvna python3.9 -m semgrep scan \
                     --config=auto \
                     --json \
                     /tmp/scan

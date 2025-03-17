@@ -85,12 +85,15 @@ pipeline {
                             docker exec dvna bash -c 'echo "deb http://archive.debian.org/debian/ jessie main" > /etc/apt/sources.list'
                             docker exec dvna bash -c 'echo "deb http://archive.debian.org/debian-security jessie/updates main" >> /etc/apt/sources.list'
                             
-                            echo "Installing Python and pip..."
+                            echo "Installing Python and dependencies..."
                             docker exec dvna apt-get -o Acquire::Check-Valid-Until=false update
-                            docker exec dvna apt-get install -y --force-yes python3 python3-pip
+                            docker exec dvna apt-get install -y --force-yes wget build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev
+                            
+                            echo "Downloading and installing Python 3.9..."
+                            docker exec dvna bash -c 'cd /tmp && wget https://www.python.org/ftp/python/3.9.18/Python-3.9.18.tgz && tar xzf Python-3.9.18.tgz && cd Python-3.9.18 && ./configure --enable-optimizations && make altinstall'
                             
                             echo "Installing semgrep..."
-                            docker exec dvna python3 -m pip install semgrep
+                            docker exec dvna python3.9 -m pip install semgrep
                             
                             echo "Container status:"
                             docker ps | grep dvna
@@ -100,12 +103,15 @@ pipeline {
                             docker exec dvna bash -c 'echo "deb http://archive.debian.org/debian/ jessie main" > /etc/apt/sources.list'
                             docker exec dvna bash -c 'echo "deb http://archive.debian.org/debian-security jessie/updates main" >> /etc/apt/sources.list'
                             
-                            echo "Installing Python and pip..."
+                            echo "Installing Python and dependencies..."
                             docker exec dvna apt-get -o Acquire::Check-Valid-Until=false update
-                            docker exec dvna apt-get install -y --force-yes python3 python3-pip
+                            docker exec dvna apt-get install -y --force-yes wget build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev
+                            
+                            echo "Downloading and installing Python 3.9..."
+                            docker exec dvna bash -c 'cd /tmp && wget https://www.python.org/ftp/python/3.9.18/Python-3.9.18.tgz && tar xzf Python-3.9.18.tgz && cd Python-3.9.18 && ./configure --enable-optimizations && make altinstall'
                             
                             echo "Installing semgrep..."
-                            docker exec dvna python3 -m pip install semgrep
+                            docker exec dvna python3.9 -m pip install semgrep
                             
                             docker ps | grep dvna
                         fi

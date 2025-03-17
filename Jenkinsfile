@@ -81,15 +81,24 @@ pipeline {
                             echo "Waiting for container to start..."
                             sleep 5
                             
-                            echo "Adding semgrep repository..."
-                            docker exec dvna bash -c 'curl -s https://sh.semgrep.dev/install-semgrep.sh | bash'
+                            echo "Installing Python and pip..."
+                            docker exec dvna apt-get update
+                            docker exec dvna apt-get install -y python3 python3-pip
+                            
+                            echo "Installing semgrep..."
+                            docker exec dvna python3 -m pip install semgrep
                             
                             echo "Container status:"
                             docker ps | grep dvna
                         else
                             echo "DVNA container is already running"
+                            echo "Installing Python and pip..."
+                            docker exec dvna apt-get update
+                            docker exec dvna apt-get install -y python3 python3-pip
+                            
                             echo "Installing semgrep..."
-                            docker exec dvna bash -c 'curl -s https://sh.semgrep.dev/install-semgrep.sh | bash'
+                            docker exec dvna python3 -m pip install semgrep
+                            
                             docker ps | grep dvna
                         fi
                         """

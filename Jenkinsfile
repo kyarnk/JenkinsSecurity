@@ -81,8 +81,12 @@ pipeline {
                             echo "Waiting for container to start..."
                             sleep 5
                             
+                            echo "Updating package sources in container..."
+                            docker exec dvna bash -c 'echo "deb http://archive.debian.org/debian/ jessie main" > /etc/apt/sources.list'
+                            docker exec dvna bash -c 'echo "deb http://archive.debian.org/debian-security jessie/updates main" >> /etc/apt/sources.list'
+                            
                             echo "Installing Python and pip..."
-                            docker exec dvna apt-get update
+                            docker exec dvna apt-get -o Acquire::Check-Valid-Until=false update
                             docker exec dvna apt-get install -y --force-yes python3 python3-pip
                             
                             echo "Installing semgrep..."
@@ -92,8 +96,12 @@ pipeline {
                             docker ps | grep dvna
                         else
                             echo "DVNA container is already running"
+                            echo "Updating package sources in container..."
+                            docker exec dvna bash -c 'echo "deb http://archive.debian.org/debian/ jessie main" > /etc/apt/sources.list'
+                            docker exec dvna bash -c 'echo "deb http://archive.debian.org/debian-security jessie/updates main" >> /etc/apt/sources.list'
+                            
                             echo "Installing Python and pip..."
-                            docker exec dvna apt-get update
+                            docker exec dvna apt-get -o Acquire::Check-Valid-Until=false update
                             docker exec dvna apt-get install -y --force-yes python3 python3-pip
                             
                             echo "Installing semgrep..."

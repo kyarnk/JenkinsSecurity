@@ -12,27 +12,30 @@ class SemgrepScanner implements Serializable {
     }
     
     def scan() {
-        return scanDVNAContainer()
-    }
-    
-    private def scanDVNAContainer() {
+        script.echo "Running scan inside DVNA container..."
+        
+        // Создаем директорию для сканирования
         script.sh """
-            # Создаем временную директорию в контейнере
             docker exec dvna mkdir -p /tmp/scan
-            
-            # Копируем код приложения для сканирования
-            docker exec dvna cp -r /app/* /tmp/scan/
-            
-            # Запускаем сканирование внутри контейнера
-            docker exec dvna bash -c 'cd /tmp/scan && semgrep scan --json --config=auto . > /tmp/semgrep-results.json'
-            
-            # Копируем результаты из контейнера
-            docker cp dvna:/tmp/semgrep-results.json ./semgrep-results.json
-            
-            # Очищаем временные файлы в контейнере
-            docker exec dvna rm -rf /tmp/scan /tmp/semgrep-results.json
+            docker exec dvna ls -la /app
+            docker exec dvna cp -r /app/dvna/* /tmp/scan/
         """
-        return script.readFile('semgrep-results.json')
+        
+        // Запускаем сканирование
+        def scanResult = script.sh(
+            script: """
+                docker exec dvna semgrep scan \
+                    --config=auto \
+                    --json \
+                    /tmp/scan
+            """,
+            returnStdout: true
+        ).trim()
+        
+        // Сохраняем результаты
+        script.writeFile file: 'semgrep-results.json', text: scanResult
+        
+        return parseResults(scanResult)
     }
     
     def parseResults(String jsonResults) {

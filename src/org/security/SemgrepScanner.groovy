@@ -18,7 +18,7 @@ class SemgrepScanner implements Serializable {
         script.sh """
             docker exec dvna mkdir -p /tmp/scan
             docker exec dvna ls -la /app
-            docker exec dvna cp -r /app/dvna/* /tmp/scan/
+            docker exec dvna cp -r /app/* /tmp/scan/
         """
         
         // Запускаем сканирование

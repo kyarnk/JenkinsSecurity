@@ -87,7 +87,7 @@ pipeline {
                             
                             echo "Installing Python and dependencies..."
                             docker exec dvna apt-get -o Acquire::Check-Valid-Until=false update
-                            docker exec dvna apt-get install -y --force-yes wget build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev openssl ca-certificates
+                            docker exec dvna apt-get install -y wget build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev openssl ca-certificates
                             
                             echo "Downloading and installing Python 3.9..."
                             docker exec dvna bash -c 'cd /tmp && wget https://www.python.org/ftp/python/3.9.18/Python-3.9.18.tgz && tar xzf Python-3.9.18.tgz && cd Python-3.9.18 && ./configure --enable-optimizations --with-ensurepip=install --with-openssl=/usr/lib/ssl --with-openssl-rpath=/usr/lib/ssl && make altinstall'

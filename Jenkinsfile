@@ -24,15 +24,15 @@ pipeline {
     }
 }
 
-//         // Pre-build: Анализ кода
-//         stage('Pre-build') {
-//             steps {
-//                 script {
+        // Pre-build: Анализ кода
+        stage('Pre-build') {
+            steps {
+                script {
 //                     // Сканируем исходный код (SAST)
-//                     runSemgrepScan('/home/JenkinsSecutiry/juice-shop', 'semgrep_report.json')
+//                     runSemgrepScan('$HOME/JenkinsSecutiry/juice-shop', 'semgrep_report.json')
                     
-//                     // Проверка зависимостей на уязвимости (SCA)
-//                     runSCAScan('bkimminich/juice-shop', 'syft_report.json', 'grype_report.json')
+                    // Проверка зависимостей на уязвимости (SCA)
+                    runSCAScan('bkimminich/juice-shop', 'syft_report.json', 'grype_report.json')
 
 //                     // Проверка инфраструктуры как кода (IaC) для дальнейшей реализации в облаке к примеру
 //                     try {
@@ -40,10 +40,10 @@ pipeline {
 //                     } catch (Exception e) {
 //                         echo "KICS scan failed: ${e.getMessage()}"
 //                         currentBuild.result = 'UNSTABLE'
-//                     }
-//                 }
-//             }
-//         }
+                    }
+                }
+            }
+        // }
 
 //         // Build: Сборка Docker-образа
 //         stage('Build') {

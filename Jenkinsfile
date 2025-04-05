@@ -26,7 +26,7 @@ pipeline {
             steps {
                 script {
                     // Сканируем исходный код (SAST)
-                    runSemgrepScan('$HOME/JenkinsSecutiry/juice-shop', 'semgrep_report.json')
+                    runSemgrepScan('juice-shop', 'semgrep_report.json')
                     
                     // Проверка зависимостей на уязвимости (SCA)
                     runSCAScan('bkimminich/juice-shop', 'syft_report.json', 'grype_report.json')

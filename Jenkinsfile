@@ -3,6 +3,11 @@
 pipeline {
     agent any
 
+    environment {
+        SOURCE_PATH = "${env.WORKSPACE}/juice-shop"
+        REPORT_DIR  = "${env.WORKSPACE}/reports"
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -20,13 +25,22 @@ pipeline {
                 }
             }
         }
+
+        stage('Prepare') {
+            steps {
+                script {
+                    // Создаём папку для всех отчётов
+                    sh "mkdir -p ${REPORT_DIR}"
+                }
+            }
+        }
     
         // Pre-build: Анализ кода
         stage('Pre-build') {
             steps {
                 script {
                     // Сканируем исходный код (SAST)
-                    runSemgrepScan('juice-shop', 'semgrep_report.json')
+                    runSemgrepScan(SOURCE_PATH, 'semgrep_report.json')
                     
                     // Проверка зависимостей на уязвимости (SCA)
                     runSCAScan('bkimminich/juice-shop', 'syft_report.json', 'grype_report.json')

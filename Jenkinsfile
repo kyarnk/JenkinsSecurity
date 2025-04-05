@@ -26,7 +26,7 @@ pipeline {
             steps {
                 script {
                     // Используем вашу функцию для сканирования Semgrep
-                    runSemgrepScan("${env.WORKSPACE}/juice-shop", 'semgrep_report.json')
+                    runSemgrepScan("/home/kyarnk/JenkinsSecurity/juice-shop", 'semgrep_report.json')
                 }
             }
         }

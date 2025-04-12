@@ -1,56 +1,35 @@
 @Library('security-library') _
 
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'semgrep/semgrep'
+        }
+    }
+
+    environment {
+        REPORT_DIR = 'reports'
+        OUTPUT_FILE = 'semgrep_report.json'
+    }
 
     stages {
-        stage('Checkout') {
+        stage('Prepare') {
             steps {
-                checkout scm
+                sh 'mkdir -p ${REPORT_DIR}'
             }
         }
 
-        stage('Debug') {
-            steps {
-                script {
-                    sh 'pwd'
-                    echo "NODE_NAME = ${env.NODE_NAME}"
-                    echo "WORKSPACE = ${env.WORKSPACE}"
-                    sh 'ls -lah'
-                }
-            }
-        }
-        
         stage('Semgrep Scan') {
             steps {
-                script {
-                    // По умолчанию сканирует весь workspace
-                    runSemgrepScan()
-                    
-                    // Или сканировать только определённую папку:
-                    // runSemgrepScan("${env.WORKSPACE}/my-app")
-                }
+                sh """
+                    semgrep --config=auto . -o ${REPORT_DIR}/${OUTPUT_FILE}
+                """
             }
         }
 
-
-        // stage('Pre-build') {
-        //     steps {
-        //         script {
-        //             // Используем вашу функцию для сканирования Semgrep
-        //             runSemgrepScan("/var/lib/jenkins/juice-shop", 'semgrep_report.json')
-        //         }
-        //     }
-        // }
-
-        // Archive Reports: Архивация отчетов
-        stage('Archive Reports') {
+        stage('Archive Report') {
             steps {
-                script {
-                    // Архивация отчетов
-                    archiveArtifacts artifacts: 'reports/*.json', fingerprint: true
-                    echo 'Reports archived.'
-                }
+                archiveArtifacts artifacts: "${REPORT_DIR}/*.json", fingerprint: true
             }
         }
     }

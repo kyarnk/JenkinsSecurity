@@ -68,6 +68,7 @@ pipeline {
         stage('Move Reports') {
             steps {
                 script {
+                    sh 'cp /home/kyarnk/reports/kics_report.json/results.json ${WORKSPACE}/kics_report.json'
                     sh 'mv /home/kyarnk/reports/*.json ${WORKSPACE}/'
                 }
             }

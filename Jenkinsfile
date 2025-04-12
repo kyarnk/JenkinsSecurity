@@ -69,7 +69,7 @@ pipeline {
             steps {
                 script {
                     sh 'cp /home/kyarnk/reports/kics_report.json/results.json ${WORKSPACE}/kics_report.json'
-                    sh 'mv /home/kyarnk/reports/*.json ${WORKSPACE}/'
+                    sh 'mv /home/kyarnk/reports/semgrep_report.json ${WORKSPACE}/'
                 }
             }
         }

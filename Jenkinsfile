@@ -1,36 +1,3 @@
-// @Library('security-library') _
-// pipeline {
-//     agent any
-
-//     stages {
-//         stage('Checkout') {
-//             steps {
-//                 checkout scm
-//             }
-//         }
-
-//         stage('Semgrep Scan') {
-//             steps {
-//                 runSemgrepScan('.', 'semgrep_report.json')  // Используем библиотеку
-//             }
-//         }
-
-//         stage ('Move reports') {
-//             steps {
-//                 script {
-//                     sh 'mv /home/kyarnk/reports/*.json $WORKSPACE/'
-//                 }
-//             }
-//         }
-
-
-//         stage('Archive Report') {
-//             steps {
-//                 archiveArtifacts artifacts: 'semgrep_report.json', fingerprint: true
-//             }
-//         }
-//     }
-// }
 @Library('security-library') _
 
 pipeline {
@@ -81,6 +48,18 @@ pipeline {
                 runSCAScan(IMAGE_NAME, 'syft_report.json', 'grype_report.json', HOME_DIR, WORKSPACE_PATH)
             }
         }
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    // Поднимаем контейнер в фоновом режиме
+                    sh """
+                        docker run -d --name juice-shop-container -p 3000:3000 ${IMAGE_NAME}
+                    """
+                }
+            }
+        }
+        
 
         stage('Move Reports') {
             steps {

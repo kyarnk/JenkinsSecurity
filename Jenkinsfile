@@ -58,8 +58,10 @@ pipeline {
 
         stage('KICS Scan') {
             steps {
-                // Передаем параметры в библиотеку
-                runKICSScan(SOURCE_PATH, 'kics_report.json', HOME_DIR, WORKSPACE_PATH)
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    // Передаем параметры в библиотеку
+                    runKICSScan(SOURCE_PATH, 'kics_report.json', HOME_DIR, WORKSPACE_PATH)  
+                }
             }
         }
 

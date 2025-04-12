@@ -1,35 +1,32 @@
 @Library('security-library') _
-
 pipeline {
-    agent {
-        docker {
-            image 'semgrep/semgrep'
-        }
-    }
-
-    environment {
-        REPORT_DIR = 'reports'
-        OUTPUT_FILE = 'semgrep_report.json'
-    }
+    agent any
 
     stages {
-        stage('Prepare') {
+        stage('Checkout') {
             steps {
-                sh 'mkdir -p ${REPORT_DIR}'
+                checkout scm
             }
         }
 
         stage('Semgrep Scan') {
             steps {
-                sh """
-                    semgrep --config=auto . -o ${REPORT_DIR}/${OUTPUT_FILE}
-                """
+                runSemgrepScan('.', 'semgrep_report.json')  // Используем библиотеку
             }
         }
 
+        stage ('Move reports') {
+            steps {
+                script {
+                    sh 'mv /home/kyarnk/semgrep-reports/*.json $WORKSPACE/'
+                }
+            }
+        }
+
+
         stage('Archive Report') {
             steps {
-                archiveArtifacts artifacts: "${REPORT_DIR}/*.json", fingerprint: true
+                archiveArtifacts artifacts: 'semgrep_report.json', fingerprint: true
             }
         }
     }

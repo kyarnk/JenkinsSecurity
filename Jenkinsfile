@@ -4,10 +4,11 @@ pipeline {
     agent any
 
     environment {
-        HOME_DIR = '/home/kyarnk'  // Указываем свой путь к домашней директории
-        SOURCE_PATH = '/home/kyarnk/JenkinsSecurity'  // Путь к исходным файлам
+        HOME_DIR       = '/home/kyarnk'  // Указываем свой путь к домашней директории
+        SOURCE_PATH    = '/home/kyarnk/JenkinsSecurity'  // Путь к исходным файлам
         WORKSPACE_PATH = '/var/lib/jenkins/workspace/user-test'  // Рабочая директория
-        IMAGE_NAME = 'bkimminich/juice-shop'
+        IMAGE_NAME     = 'bkimminich/juice-shop'
+        URL            = 'http://51.250.92.214:3000'
     }
 
     stages {
@@ -59,7 +60,14 @@ pipeline {
                 }
             }
         }
-        
+
+
+        stage('DAST Scan (ZAP)') {
+            steps {
+                runZAPScan(URL, 'zap_report.json', HOME_DIR)
+            }
+        }
+
 
         stage('Move Reports') {
             steps {
@@ -68,7 +76,7 @@ pipeline {
                     sh 'mv ${HOME_DIR}/reports/semgrep_report.json ${WORKSPACE}/'
                     sh 'mv ${HOME_DIR}/reports/syft_report.json ${WORKSPACE}/'
                     sh 'mv ${HOME_DIR}/reports/grype_report.json ${WORKSPACE}/'
-
+                    sh 'mv ${HOME_DIR}/reports/zap_report.json ${WORKSPACE}/'
                 }
             }
         }

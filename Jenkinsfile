@@ -78,7 +78,7 @@ pipeline {
         stage('SCA Scan (Syft & Grype)') {
             steps {
                 // Запуск Syft и Grype через общий скрипт
-                runScaScan(IMAGE_NAME, 'syft_report.json', 'grype_report.json', HOME_DIR, WORKSPACE_PATH)
+                runSCAScan(IMAGE_NAME, 'syft_report.json', 'grype_report.json', HOME_DIR, WORKSPACE_PATH)
             }
         }
 

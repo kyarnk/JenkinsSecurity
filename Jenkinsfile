@@ -18,7 +18,7 @@ pipeline {
         stage ('Move reports') {
             steps {
                 script {
-                    sh 'mv /home/kyarnk/semgrep-reports/*.json $WORKSPACE/'
+                    sh 'mv /home/kyarnk/reports/*.json $WORKSPACE/'
                 }
             }
         }

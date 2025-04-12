@@ -38,7 +38,7 @@ pipeline {
 
     environment {
         HOME_DIR = '/home/kyarnk'  // Указываем свой путь к домашней директории
-        SOURCE_PATH = '/home/kyarnk/juice-shop'  // Путь к исходным файлам
+        SOURCE_PATH = '/home/kyarnk/JenkinsSecurity/juice-shop'  // Путь к исходным файлам
         WORKSPACE_PATH = '/var/lib/jenkins/workspace/user-test'  // Рабочая директория
     }
 

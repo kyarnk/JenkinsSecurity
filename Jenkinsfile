@@ -9,6 +9,15 @@ pipeline {
             }
         }
 
+
+        stage('Test Docker') {
+            steps {
+                sh 'docker version'
+                sh 'docker run --rm hello-world'
+            }
+        }
+    
+
         stage('Semgrep Scan') {
             steps {
                 runSemgrepScan('.', 'semgrep_report.json')  // Используем библиотеку

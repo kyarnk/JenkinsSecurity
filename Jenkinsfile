@@ -15,13 +15,13 @@ pipeline {
             }
         }
 
-        stage ('Move reports') {
-            steps {
-                script {
-                    sh 'mv /home/kyarnk/reports/*.json $WORKSPACE/'
-                }
-            }
-        }
+        // stage ('Move reports') {
+        //     steps {
+        //         script {
+        //             sh 'mv /home/kyarnk/reports/*.json $WORKSPACE/'
+        //         }
+        //     }
+        // }
 
 
         stage('Archive Report') {

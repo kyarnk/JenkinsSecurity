@@ -38,7 +38,7 @@ pipeline {
 
     environment {
         HOME_DIR = '/home/kyarnk'  // Указываем свой путь к домашней директории
-        SOURCE_PATH = '/home/kyarnk/JenkinsSecurity/juice-shop'  // Путь к исходным файлам
+        SOURCE_PATH = '/home/kyarnk/JenkinsSecurity'  // Путь к исходным файлам
         WORKSPACE_PATH = '/var/lib/jenkins/workspace/user-test'  // Рабочая директория
     }
 
@@ -56,6 +56,13 @@ pipeline {
             }
         }
 
+        stage('KICS Scan') {
+            steps {
+                // Передаем параметры в библиотеку
+                runKICSScan(SOURCE_PATH, 'kics_report.json', HOME_DIR, WORKSPACE_PATH)
+            }
+        }
+
         stage('Move Reports') {
             steps {
                 script {
@@ -66,7 +73,7 @@ pipeline {
 
         stage('Archive Report') {
             steps {
-                archiveArtifacts artifacts: 'semgrep_report.json', fingerprint: true
+                archiveArtifacts artifacts: '**/*', fingerprint: true
             }
         }
     }

@@ -65,6 +65,15 @@ pipeline {
             }
         }
 
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Собираем Docker-образ для Juice Shop
+                    sh 'docker build -t juice-shop ${SOURCE_PATH}/juice-shop/'
+                }
+            }
+        }
+
         stage('Move Reports') {
             steps {
                 script {

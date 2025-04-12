@@ -75,7 +75,7 @@ pipeline {
 
         stage('Archive Report') {
             steps {
-                archiveArtifacts artifacts: 'semgrep_report.json, kics_report.json', fingerprint: true
+                archiveArtifacts artifacts: '${WORKSPACE}/*.json', fingerprint: true
             }
         }
     }

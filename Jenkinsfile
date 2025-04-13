@@ -7,8 +7,8 @@ pipeline {
         HOME_DIR       = '/home/kyarnk'  // Указываем свой путь к домашней директории
         SOURCE_PATH    = '/home/kyarnk/JenkinsSecurity'  // Путь к исходным файлам
         WORKSPACE_PATH = '/var/lib/jenkins/workspace/user-test'  // Рабочая директория
-        IMAGE_NAME     = 'bkimminich/juice-shop'
-        TARGET_URL     = 'https://juice-shop.kyarnk.ru'
+        IMAGE_NAME     = 'bkimminich/juice-shop' // Выбираем нужный нам image, если он уже в DockerHub или будет создан
+        TARGET_URL     = 'https://juice-shop.kyarnk.ru' // Ссылка https для работы сканера
     }
 
     stages {
@@ -68,6 +68,12 @@ pipeline {
             }
         }
 
+        stage('DAST Scan (Nuclei)') {
+            steps {
+                runNucleiScan(TARGET_URL, 'nuclei_report.json', HOME_DIR)
+            }
+        }
+
 
         stage('Move Reports') {
             steps {
@@ -77,13 +83,14 @@ pipeline {
                     sh 'mv ${HOME_DIR}/reports/syft_report.json ${WORKSPACE}/'
                     sh 'mv ${HOME_DIR}/reports/grype_report.json ${WORKSPACE}/'
                     sh 'mv ${HOME_DIR}/reports/zap_report.json ${WORKSPACE}/'
+                    sh 'mv ${HOME_DIR}/reports/nuclei_report.json ${WORKSPACE}/'
                 }
             }
         }
 
         stage('Archive Report') {
             steps {
-                archiveArtifacts artifacts: 'semgrep_report.json, kics_report.json, syft_report.json, grype_report.json, zap_report.json', fingerprint: true
+                archiveArtifacts artifacts: 'semgrep_report.json, kics_report.json, syft_report.json, grype_report.json, zap_report.json, nuclei_report.json', fingerprint: true
             }
         }
     }

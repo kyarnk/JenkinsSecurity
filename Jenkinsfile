@@ -8,7 +8,7 @@ pipeline {
         SOURCE_PATH    = '/home/kyarnk/JenkinsSecurity'  // Путь к исходным файлам
         WORKSPACE_PATH = '/var/lib/jenkins/workspace/user-test'  // Рабочая директория
         IMAGE_NAME     = 'bkimminich/juice-shop'
-        TARGET_URL            = 'http://51.250.92.214:3000'
+        TARGET_URL     = 'https://juice-shop.kyarnk.ru'
     }
 
     stages {
@@ -83,7 +83,7 @@ pipeline {
 
         stage('Archive Report') {
             steps {
-                archiveArtifacts artifacts: 'semgrep_report.json, kics_report.json, syft_report.json, grype_report.json', fingerprint: true
+                archiveArtifacts artifacts: 'semgrep_report.json, kics_report.json, syft_report.json, grype_report.json, zap_report.json', fingerprint: true
             }
         }
     }

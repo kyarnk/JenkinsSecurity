@@ -9,6 +9,12 @@ pipeline {
         WORKSPACE_PATH = '/var/lib/jenkins/workspace/user-test'  // Рабочая директория
         IMAGE_NAME     = 'bkimminich/juice-shop' // Выбираем нужный нам image, если он уже в DockerHub или будет создан
         TARGET_URL     = 'https://juice-shop.kyarnk.ru' // Ссылка https для работы сканера
+
+        // DefectDojo Environments
+        DEFECTDOJO_URL        = 'http:http://51.250.92.214:8080'
+        DEFECTDOJO_API_KEY    = credentials('defect-dojo_api_key')
+        DEFECTDOJO_PRODUCT    = 'Juice Shop' 
+        DEFECTDOJO_ENGAGEMENT = 'Initial Security Scan'
     }
 
     stages {
@@ -84,6 +90,20 @@ pipeline {
                     sh 'mv ${HOME_DIR}/reports/grype_report.json ${WORKSPACE}/'
                     sh 'mv ${HOME_DIR}/reports/zap_report.json ${WORKSPACE}/'
                     sh 'mv ${HOME_DIR}/reports/nuclei_report.json ${WORKSPACE}/'
+                }
+            }
+        }
+
+
+        stage('Send Reports to DefectDojo') {
+            steps {
+                script {
+                    uploadToDefectDojo('semgrep_report.json', 'Semgrep JSON', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
+                    uploadToDefectDojo('kics_report.json', 'KICS', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
+                    uploadToDefectDojo('syft_report.json', 'SBOM', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
+                    uploadToDefectDojo('grype_report.json', 'Grype', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
+                    uploadToDefectDojo('zap_report.json', 'ZAP Scan', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
+                    uploadToDefectDojo('nuclei_report.json', 'Nuclei Scan', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
                 }
             }
         }

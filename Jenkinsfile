@@ -11,7 +11,7 @@ pipeline {
         TARGET_URL     = 'https://juice-shop.kyarnk.ru' // Ссылка https для работы сканера
 
         // DefectDojo Environments
-        DEFECTDOJO_URL        = 'http:http://51.250.92.214:8080'
+        DEFECTDOJO_URL        = 'http://51.250.92.214:8080'
         DEFECTDOJO_API_KEY    = credentials('defect-dojo_api_key')
         DEFECTDOJO_PRODUCT    = 'Juice Shop' 
         DEFECTDOJO_ENGAGEMENT = 'Initial Security Scan'
@@ -85,11 +85,11 @@ pipeline {
             steps {
                 script {
                     sh 'cp ${HOME_DIR}/reports/kics_report.json/results.json ${WORKSPACE}/kics_report.json'
-                    sh 'mv ${HOME_DIR}/reports/semgrep_report.json ${WORKSPACE}/'
-                    sh 'mv ${HOME_DIR}/reports/syft_report.json ${WORKSPACE}/'
-                    sh 'mv ${HOME_DIR}/reports/grype_report.json ${WORKSPACE}/'
-                    sh 'mv ${HOME_DIR}/reports/zap_report.json ${WORKSPACE}/'
-                    sh 'mv ${HOME_DIR}/reports/nuclei_report.json ${WORKSPACE}/'
+                    sh 'cp ${HOME_DIR}/reports/semgrep_report.json ${WORKSPACE}/'
+                    sh 'cp ${HOME_DIR}/reports/syft_report.json ${WORKSPACE}/'
+                    sh 'cp ${HOME_DIR}/reports/grype_report.json ${WORKSPACE}/'
+                    sh 'cp ${HOME_DIR}/reports/zap_report.json ${WORKSPACE}/'
+                    sh 'cp ${HOME_DIR}/reports/nuclei_report.json ${WORKSPACE}/'
                 }
             }
         }

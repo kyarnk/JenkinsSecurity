@@ -79,18 +79,18 @@ pipeline {
             }
         }
 
-        stage('Send Reports to DefectDojo') {
-            steps {
-                script {
-                    uploadToDefectDojo('semgrep_report.json', 'Semgrep JSON', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
-                    uploadToDefectDojo('results.json', 'KICS', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
-                    uploadToDefectDojo('syft_report.json', 'SBOM', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
-                    uploadToDefectDojo('grype_report.json', 'Grype', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
-                    uploadToDefectDojo('zap_report.json', 'ZAP Scan', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
-                    uploadToDefectDojo('nuclei_report.json', 'Nuclei Scan', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
-                }
-            }
-        }
+        // stage('Send Reports to DefectDojo') {
+        //     steps {
+        //         script {
+        //             uploadToDefectDojo('semgrep_report.json', 'Semgrep JSON', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
+        //             uploadToDefectDojo('results.json', 'KICS', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
+        //             uploadToDefectDojo('syft_report.json', 'SBOM', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
+        //             uploadToDefectDojo('grype_report.json', 'Grype', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
+        //             uploadToDefectDojo('zap_report.json', 'ZAP Scan', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
+        //             uploadToDefectDojo('nuclei_report.json', 'Nuclei Scan', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
+        //         }
+        //     }
+        // }
 
         stage('Move Reports') {
             steps {
@@ -101,6 +101,60 @@ pipeline {
                     sh 'mv ${HOME_DIR}/reports/grype_report.json ${WORKSPACE}/'
                     sh 'mv ${HOME_DIR}/reports/zap_report.json ${WORKSPACE}/'
                     sh 'mv ${HOME_DIR}/reports/nuclei_report.json ${WORKSPACE}/'
+                }
+            }
+        }
+
+        stage('Send Reports to DefectDojo') {
+            steps {
+                script {
+                    uploadToDefectDojo(
+                        reportName: 'semgrep_report.json',
+                        scanType: 'Semgrep JSON',
+                        productName: "${env.DEFECTDOJO_PRODUCT}",
+                        engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
+                        homeDir: "${env.WORKSPACE}"  // используем WORKSPACE, потому что туда всё переместили
+                    )
+
+                    uploadToDefectDojo(
+                        reportName: 'kics_report.json',
+                        scanType: 'KICS',
+                        productName: "${env.DEFECTDOJO_PRODUCT}",
+                        engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
+                        homeDir: "${env.WORKSPACE}"
+                    )
+
+                    uploadToDefectDojo(
+                        reportName: 'syft_report.json',
+                        scanType: 'SBOM',
+                        productName: "${env.DEFECTDOJO_PRODUCT}",
+                        engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
+                        homeDir: "${env.WORKSPACE}"
+                    )
+
+                    uploadToDefectDojo(
+                        reportName: 'grype_report.json',
+                        scanType: 'Grype',
+                        productName: "${env.DEFECTDOJO_PRODUCT}",
+                        engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
+                        homeDir: "${env.WORKSPACE}"
+                    )
+
+                    uploadToDefectDojo(
+                        reportName: 'zap_report.json',
+                        scanType: 'ZAP Scan',
+                        productName: "${env.DEFECTDOJO_PRODUCT}",
+                        engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
+                        homeDir: "${env.WORKSPACE}"
+                    )
+
+                    uploadToDefectDojo(
+                        reportName: 'nuclei_report.json',
+                        scanType: 'Nuclei Scan',
+                        productName: "${env.DEFECTDOJO_PRODUCT}",
+                        engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
+                        homeDir: "${env.WORKSPACE}"
+                    )
                 }
             }
         }

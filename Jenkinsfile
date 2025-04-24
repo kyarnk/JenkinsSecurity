@@ -79,19 +79,6 @@ pipeline {
             }
         }
 
-        // stage('Send Reports to DefectDojo') {
-        //     steps {
-        //         script {
-        //             uploadToDefectDojo('semgrep_report.json', 'Semgrep JSON', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
-        //             uploadToDefectDojo('results.json', 'KICS', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
-        //             uploadToDefectDojo('syft_report.json', 'SBOM', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
-        //             uploadToDefectDojo('grype_report.json', 'Grype', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
-        //             uploadToDefectDojo('zap_report.json', 'ZAP Scan', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
-        //             uploadToDefectDojo('nuclei_report.json', 'Nuclei Scan', DEFECTDOJO_PRODUCT, DEFECTDOJO_ENGAGEMENT, HOME_DIR)
-        //         }
-        //     }
-        // }
-
         stage('Move Reports') {
             steps {
                 script {

@@ -10,11 +10,11 @@ pipeline {
         IMAGE_NAME     = 'bkimminich/juice-shop' // Выбираем нужный нам image, если он уже в DockerHub или будет создан
         TARGET_URL     = 'https://juice-shop.kyarnk.ru' // Ссылка https для работы сканера
 
-        // DefectDojo Environments
-        DEFECTDOJO_URL        = 'http://51.250.92.214:8080'
-        DEFECTDOJO_API_KEY    = credentials('defect-dojo_api_key')
-        DEFECTDOJO_PRODUCT    = 'Juice Shop' 
-        DEFECTDOJO_ENGAGEMENT = 'Initial Security Scan'
+         // DefectDojo Environments
+         DEFECTDOJO_URL        = 'http://51.250.92.214:8080' // Базовый URL, без /api/v2
+         DEFECTDOJO_API_KEY_CRED_ID = 'defect-dojo_api_key' // ID креденшела Jenkins
+         DEFECTDOJO_PRODUCT    = 'Juice Shop'
+         DEFECTDOJO_ENGAGEMENT = "CI/CD Scan - Build ${BUILD_NUMBER}" // Динамическое имя для каждого запуска
     }
 
     stages {
@@ -92,59 +92,127 @@ pipeline {
             }
         }
 
-        stage('Send Reports to DefectDojo') {
-            steps {
-                script {
-                    uploadToDefectDojo(
-                        reportName: 'semgrep_report.json',
-                        scanType: 'Semgrep JSON',
-                        productName: "${env.DEFECTDOJO_PRODUCT}",
-                        engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
-                        homeDir: "${env.WORKSPACE}"  // используем WORKSPACE, потому что туда всё переместили
-                    )
+         // --- Интеграция с DefectDojo ---
+         stage('Build Uploader Image') { // Опционально, если образ не собран заранее
+             // Предполагаем, что Dockerfile лежит в scripts/uploader после checkout scm
+             when { expression { fileExists('scripts/uploader/Dockerfile') } }
+             steps {
+                 script {
+                     def dockerfileDir = "${WORKSPACE}/scripts/uploader"
+                     if (dirExists(dockerfileDir)) {
+                         echo "Building Docker image from context: ${dockerfileDir}"
+                         sh "docker build -t defectdojo-uploader:latest ${dockerfileDir}"
+                     } else {
+                         echo "Uploader Dockerfile directory not found at ${dockerfileDir}, assuming image exists."
+                         // Пытаемся стянуть образ, если не собираем
+                         sh "docker pull defectdojo-uploader:latest || echo 'Could not pull defectdojo-uploader:latest'"
+                     }
+                 }
+             }
+         }
 
-                    uploadToDefectDojo(
-                        reportName: 'kics_report.json',
-                        scanType: 'KICS',
-                        productName: "${env.DEFECTDOJO_PRODUCT}",
-                        engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
-                        homeDir: "${env.WORKSPACE}"
-                    )
+         stage('Send Reports to DefectDojo') {
+             steps {
+                 script {
+                     // Список отчетов и их ТИПОВ для DefectDojo - ПРОВЕРЬТЕ ИХ В ВАШЕМ DOJO!
+                     def reports = [
+                         [name: 'semgrep_report.json', type: 'Semgrep JSON Report'],
+                         [name: 'kics_report.json',    type: 'KICS Scan'],     // Проверьте!
+                         [name: 'syft_report.json',    type: 'CycloneDX'],    // Проверьте!
+                         [name: 'grype_report.json',   type: 'Anchore Grype'],    // Проверьте!
+                         [name: 'zap_report.json',     type: 'ZAP Scan'],      // Проверьте!
+                         [name: 'nuclei_report.json',  type: 'Nuclei Scan']   // Проверьте!
+                     ]
 
-                    uploadToDefectDojo(
-                        reportName: 'syft_report.json',
-                        scanType: 'SBOM',
-                        productName: "${env.DEFECTDOJO_PRODUCT}",
-                        engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
-                        homeDir: "${env.WORKSPACE}"
-                    )
+                     reports.each { report ->
+                         def reportPath = "${WORKSPACE}/${report.name}" // Отчеты теперь в WORKSPACE
 
-                    uploadToDefectDojo(
-                        reportName: 'grype_report.json',
-                        scanType: 'Grype',
-                        productName: "${env.DEFECTDOJO_PRODUCT}",
-                        engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
-                        homeDir: "${env.WORKSPACE}"
-                    )
+                         if (fileExists(reportPath)) {
+                             echo "Attempting to upload ${report.name} (Type: ${report.type})"
+                             try {
+                                 // Используем withCredentials для безопасной передачи API ключа
+                                 withCredentials([string(credentialsId: env.DEFECTDOJO_API_KEY_CRED_ID, variable: 'DD_API_KEY')]) {
+                                     // Запускаем контейнер для загрузки
+                                     sh """
+                                         docker run --rm \\
+                                             -v "${WORKSPACE}:/reports" \\
+                                             --network host \\
+                                             defectdojo-uploader:latest \\
+                                             --url "${env.DEFECTDOJO_URL}" \\
+                                             --key "${DD_API_KEY}" \\
+                                             --product "${env.DEFECTDOJO_PRODUCT}" \\
+                                             --engagement "${env.DEFECTDOJO_ENGAGEMENT}" \\
+                                             --scan-type "${report.type}" \\
+                                             --file "/reports/${report.name}"
+                                     """
+                                      echo "Upload command finished for ${report.name}."
+                                 }
+                             } catch (Exception e) {
+                                 echo "Failed to upload ${report.name}: ${e.toString()}"
+                                 currentBuild.result = 'UNSTABLE' // Не прерываем пайплайн из-за ошибки загрузки одного отчета
+                             }
+                         } else {
+                             echo "Report file not found, skipping upload: ${reportPath}"
+                         }
+                     } // end reports.each
+                 } // end script
+             } // end steps
+         } // end stage
 
-                    uploadToDefectDojo(
-                        reportName: 'zap_report.json',
-                        scanType: 'ZAP Scan',
-                        productName: "${env.DEFECTDOJO_PRODUCT}",
-                        engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
-                        homeDir: "${env.WORKSPACE}"
-                    )
 
-                    uploadToDefectDojo(
-                        reportName: 'nuclei_report.json',
-                        scanType: 'Nuclei Scan',
-                        productName: "${env.DEFECTDOJO_PRODUCT}",
-                        engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
-                        homeDir: "${env.WORKSPACE}"
-                    )
-                }
-            }
-        }
+        // stage('Send Reports to DefectDojo') {
+        //     steps {
+        //         script {
+        //             uploadToDefectDojo(
+        //                 reportName: 'semgrep_report.json',
+        //                 scanType: 'Semgrep JSON',
+        //                 productName: "${env.DEFECTDOJO_PRODUCT}",
+        //                 engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
+        //                 homeDir: "${env.WORKSPACE}"  // используем WORKSPACE, потому что туда всё переместили
+        //             )
+
+        //             uploadToDefectDojo(
+        //                 reportName: 'kics_report.json',
+        //                 scanType: 'KICS',
+        //                 productName: "${env.DEFECTDOJO_PRODUCT}",
+        //                 engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
+        //                 homeDir: "${env.WORKSPACE}"
+        //             )
+
+        //             uploadToDefectDojo(
+        //                 reportName: 'syft_report.json',
+        //                 scanType: 'SBOM',
+        //                 productName: "${env.DEFECTDOJO_PRODUCT}",
+        //                 engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
+        //                 homeDir: "${env.WORKSPACE}"
+        //             )
+
+        //             uploadToDefectDojo(
+        //                 reportName: 'grype_report.json',
+        //                 scanType: 'Grype',
+        //                 productName: "${env.DEFECTDOJO_PRODUCT}",
+        //                 engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
+        //                 homeDir: "${env.WORKSPACE}"
+        //             )
+
+        //             uploadToDefectDojo(
+        //                 reportName: 'zap_report.json',
+        //                 scanType: 'ZAP Scan',
+        //                 productName: "${env.DEFECTDOJO_PRODUCT}",
+        //                 engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
+        //                 homeDir: "${env.WORKSPACE}"
+        //             )
+
+        //             uploadToDefectDojo(
+        //                 reportName: 'nuclei_report.json',
+        //                 scanType: 'Nuclei Scan',
+        //                 productName: "${env.DEFECTDOJO_PRODUCT}",
+        //                 engagementName: "${env.DEFECTDOJO_ENGAGEMENT}",
+        //                 homeDir: "${env.WORKSPACE}"
+        //             )
+        //         }
+        //     }
+        // }
 
         stage('Archive Report') {
             steps {

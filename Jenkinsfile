@@ -92,20 +92,29 @@ pipeline {
             }
         }
 
+ 
          // --- Интеграция с DefectDojo ---
-         stage('Build Uploader Image') { // Опционально, если образ не собран заранее
-             // Предполагаем, что Dockerfile лежит в scripts/uploader после checkout scm
-             when { expression { fileExists('scripts/uploader/Dockerfile') } }
+         // ИСПРАВЛЕННЫЙ СТЕЙДЖ СБОРКИ
+         stage('Build Uploader Image from Library') {
              steps {
                  script {
-                     def dockerfileDir = "${WORKSPACE}/scripts/uploader"
-                     if (dirExists(dockerfileDir)) {
-                         echo "Building Docker image from context: ${dockerfileDir}"
-                         sh "docker build -t defectdojo-uploader:latest ${dockerfileDir}"
-                     } else {
-                         echo "Uploader Dockerfile directory not found at ${dockerfileDir}, assuming image exists."
-                         // Пытаемся стянуть образ, если не собираем
-                         sh "docker pull defectdojo-uploader:latest || echo 'Could not pull defectdojo-uploader:latest'"
+                     def uploaderBuildDir = "${WORKSPACE}/uploader_build"
+                     try {
+                         // Получаем содержимое файлов из библиотеки
+                         def dockerfileContent = libraryResource 'scripts/uploader/Dockerfile'
+                         def uploaderScriptContent = libraryResource 'scripts/uploader/defectdojo_uploader.py'
+
+                         // Записываем содержимое во временные файлы в workspace
+                         writeFile file: "${uploaderBuildDir}/Dockerfile", text: dockerfileContent
+                         writeFile file: "${uploaderBuildDir}/defectdojo_uploader.py", text: uploaderScriptContent
+
+                         echo "Building Docker image defectdojo-uploader:latest from context: ${uploaderBuildDir}"
+                         // Собираем образ, используя директорию с файлами как контекст
+                         sh "docker build -t defectdojo-uploader:latest ${uploaderBuildDir}"
+                         echo "Docker image built successfully."
+
+                     } catch (Exception e) {
+                         error "Failed to build defectdojo-uploader image: ${e.getMessage()}. Check libraryResource paths and Docker setup."
                      }
                  }
              }
@@ -114,15 +123,17 @@ pipeline {
          stage('Send Reports to DefectDojo') {
              steps {
                  script {
-                     // Список отчетов и их ТИПОВ для DefectDojo - ПРОВЕРЬТЕ ИХ В ВАШЕМ DOJO!
+                     // ***** ВАЖНО: ПРОВЕРЬТЕ ЭТИ ТИПЫ В ВАШЕМ DEFECTDOJO v.2.45.1 *****
+                     // Перейдите в DefectDojo -> Engagement -> Import Scan Results -> Посмотрите на выпадающий список "Scan type"
                      def reports = [
-                         [name: 'semgrep_report.json', type: 'Semgrep JSON Report'],
-                         [name: 'kics_report.json',    type: 'KICS Scan'],     // Проверьте!
-                         [name: 'syft_report.json',    type: 'CycloneDX'],    // Проверьте!
-                         [name: 'grype_report.json',   type: 'Anchore Grype'],    // Проверьте!
-                         [name: 'zap_report.json',     type: 'ZAP Scan'],      // Проверьте!
-                         [name: 'nuclei_report.json',  type: 'Nuclei Scan']   // Проверьте!
+                         [name: 'semgrep_report.json', type: 'Semgrep JSON'],          // Скорее всего правильно
+                         [name: 'kics_report.json',    type: 'KICS JSON'],            // Или 'KICS Scan'?
+                         [name: 'syft_report.json',    type: 'CycloneDX'],           // Скорее всего правильно
+                         [name: 'grype_report.json',   type: 'Grype JSON'],           // Или 'Anchore Grype'?
+                         [name: 'zap_report.json',     type: 'ZAP Scan'],              // Скорее всего правильно
+                         [name: 'nuclei_report.json',  type: 'Nuclei Scan']           // Или 'Nuclei JSON'?
                      ]
+                     // *********************************************************************
 
                      reports.each { report ->
                          def reportPath = "${WORKSPACE}/${report.name}" // Отчеты теперь в WORKSPACE
@@ -130,9 +141,8 @@ pipeline {
                          if (fileExists(reportPath)) {
                              echo "Attempting to upload ${report.name} (Type: ${report.type})"
                              try {
-                                 // Используем withCredentials для безопасной передачи API ключа
                                  withCredentials([string(credentialsId: env.DEFECTDOJO_API_KEY_CRED_ID, variable: 'DD_API_KEY')]) {
-                                     // Запускаем контейнер для загрузки
+                                     // Запускаем СОБРАННЫЙ контейнер
                                      sh """
                                          docker run --rm \\
                                              -v "${WORKSPACE}:/reports" \\
@@ -149,7 +159,7 @@ pipeline {
                                  }
                              } catch (Exception e) {
                                  echo "Failed to upload ${report.name}: ${e.toString()}"
-                                 currentBuild.result = 'UNSTABLE' // Не прерываем пайплайн из-за ошибки загрузки одного отчета
+                                 currentBuild.result = 'UNSTABLE'
                              }
                          } else {
                              echo "Report file not found, skipping upload: ${reportPath}"
@@ -158,7 +168,6 @@ pipeline {
                  } // end script
              } // end steps
          } // end stage
-
 
         // stage('Send Reports to DefectDojo') {
         //     steps {

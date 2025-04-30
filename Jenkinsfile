@@ -99,14 +99,22 @@ pipeline {
                  script {
                      // Путь к Dockerfile ОТНОСИТЕЛЬНО WORKSPACE после checkout scm
                      def dockerfileDir = "${WORKSPACE}/scripts/uploader"
-                     if (dirExists(dockerfileDir) && fileExists("${dockerfileDir}/Dockerfile")) {
-                         echo "Building Docker image defectdojo-uploader:latest from context: ${dockerfileDir}"
+                     def dockerfilePath = "${dockerfileDir}/Dockerfile"
+
+                     // Используем только fileExists для проверки Dockerfile
+                     if (fileExists(dockerfilePath)) {
+                         echo "Found Dockerfile at ${dockerfilePath}. Building Docker image defectdojo-uploader:latest from context: ${dockerfileDir}"
                          // Собираем образ, используя директорию из checkout как контекст
-                         sh "docker build -t defectdojo-uploader:latest ${dockerfileDir}"
-                         echo "Docker image built successfully."
+                         // Оборачиваем в try-catch на случай ошибок Docker
+                         try {
+                            sh "docker build -t defectdojo-uploader:latest ${dockerfileDir}"
+                            echo "Docker image built successfully."
+                         } catch (Exception e) {
+                            error "Failed during docker build for ${dockerfileDir}: ${e.getMessage()}"
+                         }
                      } else {
-                         // Если файлы не добавлены в репозиторий SCM, сборка невозможна
-                         error "Uploader Dockerfile not found at ${dockerfileDir}. Please add scripts/uploader/Dockerfile and defectdojo_uploader.py to your source code repository."
+                         // Если Dockerfile не найден в репозитории SCM, сборка невозможна
+                         error "Uploader Dockerfile not found at ${dockerfilePath}. Please add scripts/uploader/Dockerfile and defectdojo_uploader.py to your source code repository."
                      }
                  }
              }

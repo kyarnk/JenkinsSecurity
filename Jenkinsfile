@@ -40,14 +40,14 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    // Собираем Docker-образ для Juice Shop
-                    sh 'docker build -t juice-shop ${SOURCE_PATH}/juice-shop/'
-                }
-            }
-        }
+        // stage('Build Docker Image') {
+        //     steps {
+        //         script {
+        //             // Собираем Docker-образ для Juice Shop
+        //             sh 'docker build -t juice-shop ${SOURCE_PATH}/juice-shop/'
+        //         }
+        //     }
+        // }
 
         stage('SCA Scan (Syft & Grype)') {
             steps {

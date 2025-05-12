@@ -12,7 +12,7 @@ pipeline {
 
         //  // DefectDojo Environments
         DEFECTDOJO_HOST   = 'http://51.250.92.214:8080' // Базовый URL, без /api/v2
-        DEFECTDOJO_TOKEN  = 'token_dd_api' // ID креденшела Jenkins
+        DEFECTDOJO_TOKEN  = 'b6042dd7fe6395dc49140f24f99a5a9c65f1e9de' // ID креденшела Jenkins
     }
 
     stages {

@@ -104,7 +104,7 @@ pipeline {
 
         stage('Upload KICS Report to DefectDojo') {
             steps {
-                sh '
+                sh '''
                 curl -X POST "$DEFECTDOJO_HOST/api/v2/import-scan/" \
                   -H "Authorization: Token $DEFECTDOJO_TOKEN" \
                   -H "accept: application/json" \
@@ -116,7 +116,7 @@ pipeline {
                   -F "active=true" \
                   -F "verified=true" \
                   -F "close_old_findings=true"
-                '
+                '''
             }
         }
 

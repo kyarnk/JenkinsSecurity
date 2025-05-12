@@ -28,7 +28,7 @@ pipeline {
         stage('Upload to DD') {
             steps {
                 script {
-                    sh 'docker run -d --name upload-dd docker.io/zhuzha/upload-to-dd'
+                    sh 'docker run -d --name upload-dd docker.io/zhuzha/upload-to-dd:latest'
                     sh 'docker ps -a'
                     sh 'docker logs upload-dd'
                 }

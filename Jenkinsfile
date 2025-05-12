@@ -92,11 +92,11 @@ pipeline {
             steps {
                 script {
                     sh 'cp ${HOME_DIR}/reports/kics_report.json/results.json ${WORKSPACE}/kics_report.json'
-                    sh 'mv ${HOME_DIR}/reports/semgrep_report.json ${WORKSPACE}/'
-                    sh 'mv ${HOME_DIR}/reports/syft_report.json ${WORKSPACE}/'
-                    sh 'mv ${HOME_DIR}/reports/grype_report.json ${WORKSPACE}/'
-                    sh 'mv ${HOME_DIR}/reports/zap_report.json ${WORKSPACE}/'
-                    sh 'mv ${HOME_DIR}/reports/nuclei_report.json ${WORKSPACE}/'
+                    // sh 'mv ${HOME_DIR}/reports/semgrep_report.json ${WORKSPACE}/'
+                    // sh 'mv ${HOME_DIR}/reports/syft_report.json ${WORKSPACE}/'
+                    // sh 'mv ${HOME_DIR}/reports/grype_report.json ${WORKSPACE}/'
+                    // sh 'mv ${HOME_DIR}/reports/zap_report.json ${WORKSPACE}/'
+                    // sh 'mv ${HOME_DIR}/reports/nuclei_report.json ${WORKSPACE}/'
                 }
             }
         }

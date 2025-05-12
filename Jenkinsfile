@@ -29,6 +29,7 @@ pipeline {
             steps {
                 script {
                     sh 'docker run -d --name upload-dd docker.io/zhuzha/upload-to-dd:newest'
+                    sh 'docker ps -a'
                     sh 'docker logs upload-dd'
                 }
             }

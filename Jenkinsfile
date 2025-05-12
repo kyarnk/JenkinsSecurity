@@ -109,7 +109,7 @@ pipeline {
                   -H "Authorization: Token $DEFECTDOJO_TOKEN" \
                   -H "accept: application/json" \
                   -H "Content-Type: multipart/form-data" \
-                  -F "file=@reports/kics.json" \
+                  -F "file=@reports/results.json" \
                   -F "engagement=5" \
                   -F "scan_type=KICS Scan" \
                   -F "scan_date=2025-05-12" \

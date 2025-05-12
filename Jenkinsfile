@@ -105,7 +105,7 @@ pipeline {
 
         stage('Upload Semgrep Report') {
             steps {
-                uploadReportToDefectDojo(
+                runUploadToDD(
                     file: 'kics_report.json',
                     engagement: '5',
                     scanType: 'KICS Scan',

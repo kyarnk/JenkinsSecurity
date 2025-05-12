@@ -11,10 +11,8 @@ pipeline {
         TARGET_URL     = 'https://juice-shop.kyarnk.ru' // Ссылка https для работы сканера
 
         //  // DefectDojo Environments
-        //  DEFECTDOJO_URL        = 'http://51.250.92.214:8080' // Базовый URL, без /api/v2
-        //  DEFECTDOJO_API_KEY_CRED_ID = 'defect-dojo_api_key' // ID креденшела Jenkins
-        //  DEFECTDOJO_PRODUCT    = 'Juice Shop'
-        //  DEFECTDOJO_ENGAGEMENT = "CI/CD Scan - Build ${BUILD_NUMBER}" // Динамическое имя для каждого запуска
+        DEFECTDOJO_HOST   = 'http://51.250.92.214:8080' // Базовый URL, без /api/v2
+        DEFECTDOJO_TOKEN  = 'token_dd_api' // ID креденшела Jenkins
     }
 
     stages {
@@ -25,22 +23,22 @@ pipeline {
         }
 
 
-        // stage('Upload to DD') {
+        // // stage('Upload to DD') {
+        // //     steps {
+        // //         script {
+        // //             sh 'docker run -d --name upload-dd docker.io/zhuzha/upload-to-dd:latest'
+        // //             sh 'docker ps -a'
+        // //             sh 'docker logs upload-dd'
+        // //         }
+        // //     }
+        // // }
+
+        // stage('Semgrep Scan') {
         //     steps {
-        //         script {
-        //             sh 'docker run -d --name upload-dd docker.io/zhuzha/upload-to-dd:latest'
-        //             sh 'docker ps -a'
-        //             sh 'docker logs upload-dd'
-        //         }
+        //         // Передаем параметры в библиотеку
+        //         runSemgrepScan(SOURCE_PATH, 'semgrep_report.json', HOME_DIR, WORKSPACE_PATH)
         //     }
         // }
-
-        stage('Semgrep Scan') {
-            steps {
-                // Передаем параметры в библиотеку
-                runSemgrepScan(SOURCE_PATH, 'semgrep_report.json', HOME_DIR, WORKSPACE_PATH)
-            }
-        }
 
         stage('KICS Scan') {
             steps {
@@ -60,35 +58,35 @@ pipeline {
         //     }
         // }
 
-        stage('SCA Scan (Syft & Grype)') {
-            steps {
-                // Запуск Syft и Grype через общий скрипт
-                runSCAScan(IMAGE_NAME, 'syft_report.json', 'grype_report.json', HOME_DIR, WORKSPACE_PATH)
-            }
-        }
+        // stage('SCA Scan (Syft & Grype)') {
+        //     steps {
+        //         // Запуск Syft и Grype через общий скрипт
+        //         runSCAScan(IMAGE_NAME, 'syft_report.json', 'grype_report.json', HOME_DIR, WORKSPACE_PATH)
+        //     }
+        // }
 
-        stage('Run Docker Container') {
-            steps {
-                script {
-                    // Поднимаем контейнер в фоновом режиме
-                    sh """
-                        docker run -d --name juice-shop-container -p 3000:3000 ${IMAGE_NAME}
-                    """
-                }
-            }
-        }
+        // stage('Run Docker Container') {
+        //     steps {
+        //         script {
+        //             // Поднимаем контейнер в фоновом режиме
+        //             sh """
+        //                 docker run -d --name juice-shop-container -p 3000:3000 ${IMAGE_NAME}
+        //             """
+        //         }
+        //     }
+        // }
 
-        stage('DAST Scan (ZAP)') {
-            steps {
-                runZAPScan(TARGET_URL, 'zap_report.json', HOME_DIR)
-            }
-        }
+        // stage('DAST Scan (ZAP)') {
+        //     steps {
+        //         runZAPScan(TARGET_URL, 'zap_report.json', HOME_DIR)
+        //     }
+        // }
 
-        stage('DAST Scan (Nuclei)') {
-            steps {
-                runNucleiScan(TARGET_URL, 'nuclei_report.json', HOME_DIR)
-            }
-        }
+        // stage('DAST Scan (Nuclei)') {
+        //     steps {
+        //         runNucleiScan(TARGET_URL, 'nuclei_report.json', HOME_DIR)
+        //     }
+        // }
 
         stage('Move Reports') {
             steps {
@@ -103,14 +101,22 @@ pipeline {
             }
         }
 
-        stage('Upload Semgrep Report') {
+
+        stage('Upload KICS Report to DefectDojo') {
             steps {
-                runUploadToDD(
-                    file: 'kics_report.json',
-                    engagement: '5',
-                    scanType: 'KICS Scan',
-                    scanDate: '2025-05-12'
-                )
+                sh '
+                curl -X POST "$DEFECTDOJO_HOST/api/v2/import-scan/" \
+                  -H "Authorization: Token $DEFECTDOJO_TOKEN" \
+                  -H "accept: application/json" \
+                  -H "Content-Type: multipart/form-data" \
+                  -F "file=@reports/kics.json" \
+                  -F "engagement=5" \
+                  -F "scan_type=KICS Scan" \
+                  -F "scan_date=2025-05-12" \
+                  -F "active=true" \
+                  -F "verified=true" \
+                  -F "close_old_findings=true"
+                '
             }
         }
 

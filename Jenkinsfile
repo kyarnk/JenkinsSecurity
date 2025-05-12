@@ -28,7 +28,7 @@ pipeline {
         stage('Upload to DD') {
             steps {
                 script {
-                    sh 'pip3 install requests'
+                    sh 'docker run --rm -d --name upload-dd docker.io/zhuzha/upload-to-dd:newest'
                 }
             }
         }

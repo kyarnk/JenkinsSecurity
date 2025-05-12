@@ -178,10 +178,10 @@ pipeline {
 //         //      }
 //         //  }
 
-//         stage('Archive Report') {
-//             steps {
-//                 archiveArtifacts artifacts: 'semgrep_report.json, kics_report.json, syft_report.json, grype_report.json, zap_report.json, nuclei_report.json', fingerprint: true
-//             }
-//         }
-//     }
-// }
+        stage('Archive Report') {
+            steps {
+                archiveArtifacts artifacts: 'semgrep_report.json, kics_report.json, syft_report.json, grype_report.json, zap_report.json, nuclei_report.json', fingerprint: true
+            }
+        }
+    }
+}

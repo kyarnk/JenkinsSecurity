@@ -12,7 +12,7 @@ pipeline {
 
         //  // DefectDojo Environments
         DEFECTDOJO_HOST   = 'http://51.250.92.214:8080' // Базовый URL, без /api/v2
-        DEFECTDOJO_TOKEN  = 'b6042dd7fe6395dc49140f24f99a5a9c65f1e9de' // ID креденшела Jenkins
+        DEFECTDOJO_TOKEN  = '' // ID креденшела Jenkins
     }
 
     stages {
@@ -23,22 +23,12 @@ pipeline {
         }
 
 
-        // // stage('Upload to DD') {
-        // //     steps {
-        // //         script {
-        // //             sh 'docker run -d --name upload-dd docker.io/zhuzha/upload-to-dd:latest'
-        // //             sh 'docker ps -a'
-        // //             sh 'docker logs upload-dd'
-        // //         }
-        // //     }
-        // // }
-
-        // stage('Semgrep Scan') {
-        //     steps {
-        //         // Передаем параметры в библиотеку
-        //         runSemgrepScan(SOURCE_PATH, 'semgrep_report.json', HOME_DIR, WORKSPACE_PATH)
-        //     }
-        // }
+        stage('Semgrep Scan') {
+            steps {
+                // Передаем параметры в библиотеку
+                runSemgrepScan(SOURCE_PATH, 'semgrep_report.json', HOME_DIR, WORKSPACE_PATH)
+            }
+        }
 
         stage('KICS Scan') {
             steps {
@@ -58,45 +48,45 @@ pipeline {
         //     }
         // }
 
-        // stage('SCA Scan (Syft & Grype)') {
-        //     steps {
-        //         // Запуск Syft и Grype через общий скрипт
-        //         runSCAScan(IMAGE_NAME, 'syft_report.json', 'grype_report.json', HOME_DIR, WORKSPACE_PATH)
-        //     }
-        // }
+        stage('SCA Scan (Syft & Grype)') {
+            steps {
+                // Запуск Syft и Grype через общий скрипт
+                runSCAScan(IMAGE_NAME, 'syft_report.json', 'grype_report.json', HOME_DIR, WORKSPACE_PATH)
+            }
+        }
 
-        // stage('Run Docker Container') {
-        //     steps {
-        //         script {
-        //             // Поднимаем контейнер в фоновом режиме
-        //             sh """
-        //                 docker run -d --name juice-shop-container -p 3000:3000 ${IMAGE_NAME}
-        //             """
-        //         }
-        //     }
-        // }
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    // Поднимаем контейнер в фоновом режиме
+                    sh """
+                        docker run -d --name juice-shop-container -p 3000:3000 ${IMAGE_NAME}
+                    """
+                }
+            }
+        }
 
-        // stage('DAST Scan (ZAP)') {
-        //     steps {
-        //         runZAPScan(TARGET_URL, 'zap_report.json', HOME_DIR)
-        //     }
-        // }
+        stage('DAST Scan (ZAP)') {
+            steps {
+                runZAPScan(TARGET_URL, 'zap_report.json', HOME_DIR)
+            }
+        }
 
-        // stage('DAST Scan (Nuclei)') {
-        //     steps {
-        //         runNucleiScan(TARGET_URL, 'nuclei_report.json', HOME_DIR)
-        //     }
-        // }
+        stage('DAST Scan (Nuclei)') {
+            steps {
+                runNucleiScan(TARGET_URL, 'nuclei_report.json', HOME_DIR)
+            }
+        }
 
         stage('Move Reports') {
             steps {
                 script {
                     sh 'cp ${HOME_DIR}/reports/kics_report.json/results.json ${WORKSPACE}/kics_report.json'
-                    // sh 'mv ${HOME_DIR}/reports/semgrep_report.json ${WORKSPACE}/'
-                    // sh 'mv ${HOME_DIR}/reports/syft_report.json ${WORKSPACE}/'
-                    // sh 'mv ${HOME_DIR}/reports/grype_report.json ${WORKSPACE}/'
-                    // sh 'mv ${HOME_DIR}/reports/zap_report.json ${WORKSPACE}/'
-                    // sh 'mv ${HOME_DIR}/reports/nuclei_report.json ${WORKSPACE}/'
+                    sh 'mv ${HOME_DIR}/reports/semgrep_report.json ${WORKSPACE}/'
+                    sh 'mv ${HOME_DIR}/reports/syft_report.json ${WORKSPACE}/'
+                    sh 'mv ${HOME_DIR}/reports/grype_report.json ${WORKSPACE}/'
+                    sh 'mv ${HOME_DIR}/reports/zap_report.json ${WORKSPACE}/'
+                    sh 'mv ${HOME_DIR}/reports/nuclei_report.json ${WORKSPACE}/'
                 }
             }
         }

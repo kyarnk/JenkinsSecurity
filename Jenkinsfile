@@ -10,17 +10,26 @@ pipeline {
         IMAGE_NAME     = 'bkimminich/juice-shop' // Выбираем нужный нам image, если он уже в DockerHub или будет создан
         TARGET_URL     = 'https://juice-shop.kyarnk.ru' // Ссылка https для работы сканера
 
-         // DefectDojo Environments
-         DEFECTDOJO_URL        = 'http://51.250.92.214:8080' // Базовый URL, без /api/v2
-         DEFECTDOJO_API_KEY_CRED_ID = 'defect-dojo_api_key' // ID креденшела Jenkins
-         DEFECTDOJO_PRODUCT    = 'Juice Shop'
-         DEFECTDOJO_ENGAGEMENT = "CI/CD Scan - Build ${BUILD_NUMBER}" // Динамическое имя для каждого запуска
+        //  // DefectDojo Environments
+        //  DEFECTDOJO_URL        = 'http://51.250.92.214:8080' // Базовый URL, без /api/v2
+        //  DEFECTDOJO_API_KEY_CRED_ID = 'defect-dojo_api_key' // ID креденшела Jenkins
+        //  DEFECTDOJO_PRODUCT    = 'Juice Shop'
+        //  DEFECTDOJO_ENGAGEMENT = "CI/CD Scan - Build ${BUILD_NUMBER}" // Динамическое имя для каждого запуска
     }
 
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+
+
+        stage('Upload to DD') {
+            steps {
+                script {
+                    sh 'pip3 install requests'
+                }
             }
         }
 
